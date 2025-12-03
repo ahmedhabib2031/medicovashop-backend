@@ -24,6 +24,8 @@ import { DiscountModule } from './discount/discount.module';
 import { BrandsModule } from './brands/brands.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ConfigModule } from '@nestjs/config';
+import { UploadModule } from './upload/upload.module';  // <<<<<< IMPORTANT
+
 import {
   I18nModule,
   AcceptLanguageResolver,
@@ -59,6 +61,7 @@ import * as path from 'path';
     CartModule,
     PaymentsModule,
     ReviewsModule,
+    UploadModule,
     FaqModule,
     NotificationsModule,
     CouponsModule,
