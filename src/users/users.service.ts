@@ -31,81 +31,88 @@ export class UsersService {
     return obj;
   }
 
+  // src/users/users.service.ts
 
+  // Get all users
+  async findAllUsers(): Promise<Partial<User>[]> {
+    const users = await this.userModel.find({ role: UserRole.USER });
+    return users.map((user) => {
+      const obj = user.toObject();
+      delete obj.password;
+      return obj;
+    });
+  }
 
-// src/users/users.service.ts
+  // Get all sellers
+  async findAllSellers(): Promise<Partial<User>[]> {
+    const sellers = await this.userModel.find({ role: UserRole.SELLER });
+    return sellers.map((seller) => {
+      const obj = seller.toObject();
+      delete obj.password;
+      return obj;
+    });
+  }
+  // Search users by name or email
+  async searchUsers(query: string) {
+    const users = await this.userModel.find({
+      $or: [
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+      ],
+    });
 
-// Get all users
-async findAllUsers(): Promise<Partial<User>[]> {
-  const users = await this.userModel.find({ role: UserRole.USER });
-  return users.map((user) => {
+    return users.map((u) => {
+      const obj = u.toObject();
+      delete obj.password;
+      return obj;
+    });
+  }
+
+  // Change user role
+  async changeUserRole(id: string, role: UserRole): Promise<Partial<User>> {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true },
+    );
+    if (!user) throw new NotFoundException('User not found');
     const obj = user.toObject();
     delete obj.password;
     return obj;
-  });
-}
+  }
 
-// Get all sellers
-async findAllSellers(): Promise<Partial<User>[]> {
-  const sellers = await this.userModel.find({ role: UserRole.SELLER });
-  return sellers.map((seller) => {
-    const obj = seller.toObject();
+  // Activate/deactivate user
+  async changeUserStatus(id: string, active: boolean): Promise<Partial<User>> {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { active },
+      { new: true },
+    );
+    if (!user) throw new NotFoundException('User not found');
+    const obj = user.toObject();
     delete obj.password;
     return obj;
-  });
-}
-// Search users by name or email
-async searchUsers(query: string): Promise<Partial<User>[]> {
-  const users = await this.userModel.find({
-    $or: [
-      { fullName: { $regex: query, $options: 'i' } },
-      { email: { $regex: query, $options: 'i' } },
-    ],
-  });
-  return users.map(u => {
-    const obj = u.toObject();
-    delete obj.password;
-    return obj;
-  });
-}
+  }
 
-// Change user role
-async changeUserRole(id: string, role: UserRole): Promise<Partial<User>> {
-  const user = await this.userModel.findByIdAndUpdate(id, { role }, { new: true });
-  if (!user) throw new NotFoundException('User not found');
-  const obj = user.toObject();
-  delete obj.password;
-  return obj;
-}
+  // Reset password
+  async resetPassword(id: string, password: string): Promise<void> {
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await this.userModel.findByIdAndUpdate(id, {
+      password: hashed,
+    });
+    if (!user) throw new NotFoundException('User not found');
+  }
 
-// Activate/deactivate user
-async changeUserStatus(id: string, active: boolean): Promise<Partial<User>> {
-  const user = await this.userModel.findByIdAndUpdate(id, { active }, { new: true });
-  if (!user) throw new NotFoundException('User not found');
-  const obj = user.toObject();
-  delete obj.password;
-  return obj;
-}
-
-// Reset password
-async resetPassword(id: string, password: string): Promise<void> {
-  const hashed = await bcrypt.hash(password, 10);
-  const user = await this.userModel.findByIdAndUpdate(id, { password: hashed });
-  if (!user) throw new NotFoundException('User not found');
-}
-
- 
-
-// Get all admins
-async findAllAdmins(): Promise<Partial<User>[]> {
-  const admins = await this.userModel.find({ role: UserRole.ADMIN });
-  return admins.map((admin) => {
-    const obj = admin.toObject();
-    delete obj.password;
-    return obj;
-  });
-}
-
+  // Get all admins
+  async findAllAdmins(): Promise<Partial<User>[]> {
+    const admins = await this.userModel.find({ role: UserRole.ADMIN });
+    return admins.map((admin) => {
+      const obj = admin.toObject();
+      delete obj.password;
+      return obj;
+    });
+  }
 
   // Update user profile
   async update(id: string, data: Partial<User>): Promise<User> {

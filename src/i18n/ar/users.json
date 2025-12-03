@@ -1,0 +1,11 @@
+{
+  "PROFILE_FETCHED": "تم جلب الملف الشخصي بنجاح",
+  "SEARCH_RESULTS": "نتائج البحث عن",
+  "USER_FETCHED": "تم جلب المستخدم بنجاح",
+  "ALL_USERS_FETCHED": "تم جلب جميع المستخدمين بنجاح",
+  "UPDATED_SUCCESS": "تم التحديث بنجاح",
+  "USER_DELETED": "تم حذف المستخدم بنجاح",
+  "PASSWORD_UPDATED": "تم تحديث كلمة المرور بنجاح",
+  "USER_ROLE_UPDATED": "تم تحديث دور المستخدم بنجاح",
+  "USER_STATUS_UPDATED": "تم تحديث حالة المستخدم بنجاح"
+}

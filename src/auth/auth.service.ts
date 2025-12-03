@@ -18,10 +18,9 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const exists = await this.usersService.findByEmail(dto.email);
-    if (exists) throw new BadRequestException('Email already exists');
+    if (exists) throw new BadRequestException('EMAIL_EXISTS');
 
     const hashed = await bcrypt.hash(dto.password, 10);
-
     const user = await this.usersService.create({ ...dto, password: hashed });
 
     return this.generateTokens(user);
@@ -29,19 +28,27 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('INVALID_CREDENTIALS');
 
     const match = await bcrypt.compare(dto.password, user.password);
-    if (!match) throw new UnauthorizedException('Invalid credentials');
+    if (!match) throw new UnauthorizedException('INVALID_CREDENTIALS');
 
     return this.generateTokens(user);
   }
 
-  generateTokens(user) {
-    const payload = { id: user._id, role: user.role };
+  generateTokens(user: any) {
+    // relax type to `any` or Mongoose Document
+    const payload = {
+      id: user._id?.toString() || user.id, // fallback if needed
+      role: user.role,
+      language: user.language,
+    };
     return {
       accessToken: this.jwt.sign(payload, { expiresIn: '1d' }),
     };
   }
 
+  async getUserByEmail(email: string) {
+    return this.usersService.findByEmail(email);
+  }
 }

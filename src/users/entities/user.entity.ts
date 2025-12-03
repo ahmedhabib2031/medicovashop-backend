@@ -20,6 +20,9 @@ export class User {
   @Prop({ required: true, unique: true })
   email: string;
 
+  @Prop({ type: String, enum: ['ar', 'en'], default: 'en' })
+  language: string;
+
   @Prop({ required: true })
   password: string;
 
@@ -29,6 +32,9 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
+
+  @Prop({ type: Boolean, default: true })
+  active: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

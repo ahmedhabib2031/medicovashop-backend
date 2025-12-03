@@ -8,7 +8,7 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-
+import { I18nService } from 'nestjs-i18n';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -18,112 +18,151 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private readonly i18n: I18nService,
+  ) {}
 
-  // Get my profile
+  private getLang(req: any): string {
+    return (
+      req.headers['accept-language']?.split(',')[0] ||
+      req.user?.language ||
+      'en'
+    );
+  }
+
   @Get('me')
   async getMe(@Req() req) {
     const profile = await this.usersService.findById(req.user.id);
+    const lang = this.getLang(req);
     return {
       data: profile,
-      message: 'Profile fetched successfully',
+      message: await this.i18n.t('users.PROFILE_FETCHED', { lang }),
     };
   }
-  @Get(':id')
+
+  @Get('search/:query')
   @Roles(UserRole.ADMIN)
-  async getUserById(@Param('id') id: string) {
-    const user = await this.usersService.findById(id);
-    return {
-      data: user,
-      message: 'User fetched successfully',
-    };
-  }
-    @Get('search/:query')
-  @Roles(UserRole.ADMIN)
-  async searchUsers(@Param('query') query: string) {
+  async searchUsers(@Param('query') query: string, @Req() req) {
     const users = await this.usersService.searchUsers(query);
+    const lang = this.getLang(req);
     return {
       data: users,
-      message: `Search results for "${query}"`,
+      message: await this.i18n.t('users.SEARCH_RESULTS', {
+        lang,
+        args: { query },
+      }),
     };
   }
 
-      @Put('role/:id')
-    @Roles(UserRole.ADMIN)
-    async changeUserRole(@Param('id') id: string, @Body('role') role: UserRole) {
-      const user = await this.usersService.changeUserRole(id, role);
-      return {
-        data: user,
-        message: 'User role updated successfully',
-      };
-    }
-    @Put('status/:id')
-    @Roles(UserRole.ADMIN)
-    async changeUserStatus(@Param('id') id: string, @Body('active') active: boolean) {
-      const user = await this.usersService.changeUserStatus(id, active);
-      return {
-        data: user,
-        message: `User has been ${active ? 'activated' : 'deactivated'}`,
-      };
-    }
-    @Put('reset-password/:id')
-    async resetPassword(@Param('id') id: string, @Body('password') password: string) {
-      const result = await this.usersService.resetPassword(id, password);
-      return {
-        message: 'Password updated successfully',
-      };
-    }
+  @Put('role/:id')
+  @Roles(UserRole.ADMIN)
+  async changeUserRole(
+    @Param('id') id: string,
+    @Body('role') role: UserRole,
+    @Req() req,
+  ) {
+    const user = await this.usersService.changeUserRole(id, role);
+    const lang = this.getLang(req);
+    return {
+      data: user,
+      message: await this.i18n.t('users.ROLE_UPDATED', { lang }),
+    };
+  }
 
-  // Update my profile
+  @Put('status/:id')
+  @Roles(UserRole.ADMIN)
+  async changeUserStatus(
+    @Param('id') id: string,
+    @Body('active') active: boolean,
+    @Req() req,
+  ) {
+    const user = await this.usersService.changeUserStatus(id, active);
+    const lang = this.getLang(req);
+    return {
+      data: user,
+      message: await this.i18n.t(
+        active ? 'users.USER_ACTIVATED' : 'users.USER_DEACTIVATED',
+        { lang },
+      ),
+    };
+  }
+
+  @Put('reset-password/:id')
+  @Roles(UserRole.ADMIN)
+  async resetPassword(
+    @Param('id') id: string,
+    @Body('password') password: string,
+    @Req() req,
+  ) {
+    await this.usersService.resetPassword(id, password);
+    const lang = this.getLang(req);
+    return {
+      message: await this.i18n.t('users.PASSWORD_UPDATED', { lang }),
+    };
+  }
+
   @Put('me')
   async updateMe(@Req() req, @Body() body) {
     const updated = await this.usersService.update(req.user.id, body);
+    const lang = this.getLang(req);
     return {
       data: updated,
-      message: 'Profile updated successfully',
+      message: await this.i18n.t('users.PROFILE_UPDATED', { lang }),
     };
   }
 
-  // Get all users (admin only)
   @Get('all-users')
   @Roles(UserRole.ADMIN)
-  async getAllUsers() {
+  async getAllUsers(@Req() req) {
     const users = await this.usersService.findAllUsers();
+    const lang = this.getLang(req);
     return {
       data: users,
-      message: 'All users fetched successfully',
+      message: await this.i18n.t('users.ALL_USERS_FETCHED', { lang }),
     };
   }
 
-  // Get all sellers (admin only)
   @Get('all-sellers')
   @Roles(UserRole.ADMIN)
-  async getAllSellers() {
+  async getAllSellers(@Req() req) {
     const sellers = await this.usersService.findAllSellers();
+    const lang = this.getLang(req);
     return {
       data: sellers,
-      message: 'All sellers fetched successfully',
+      message: await this.i18n.t('users.ALL_SELLERS_FETCHED', { lang }),
     };
   }
 
-  // Get all admins (admin only)
   @Get('all-admins')
   @Roles(UserRole.ADMIN)
-  async getAllAdmins() {
+  async getAllAdmins(@Req() req) {
     const admins = await this.usersService.findAllAdmins();
+    const lang = this.getLang(req);
     return {
       data: admins,
-      message: 'All admins fetched successfully',
+      message: await this.i18n.t('users.ALL_ADMINS_FETCHED', { lang }),
     };
   }
 
-  // Delete user (admin only)
+  @Get(':id')
+  @Roles(UserRole.ADMIN)
+  async getUserById(@Param('id') id: string, @Req() req) {
+    const user = await this.usersService.findById(id);
+    const lang = this.getLang(req);
+    return {
+      data: user,
+      message: await this.i18n.t('users.USER_FETCHED', { lang }),
+    };
+  }
+
   @Delete(':id')
   @Roles(UserRole.ADMIN)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string, @Req() req) {
     await this.usersService.delete(id);
+    const lang = this.getLang(req);
     return {
-      message: 'User deleted successfully',
+      message: await this.i18n.t('users.USER_DELETED', { lang }),
     };
   }
 }

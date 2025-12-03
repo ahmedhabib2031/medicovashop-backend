@@ -7,36 +7,23 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface ResponseFormat<T> {
-  status: string;
-  data: T;
-  message?: string;
-}
-
 @Injectable()
-export class ResponseInterceptor<T>
-  implements NestInterceptor<T, ResponseFormat<T>>
-{
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<ResponseFormat<T>> {
+export class ResponseInterceptor<T> implements NestInterceptor<T> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map((data: any) => {
-        // If the controller returns an object with data + message, use it
-        if (data && data.data !== undefined && data.message !== undefined) {
-          return {
-            status: 'success',
-            data: data.data,
-            message: data.message,
-          };
+      map((response: any) => {
+        // If response is already { data, message }, just add status
+        if (response && 'data' in response && 'message' in response) {
+          return { status: 'success', ...response };
         }
 
-        return {
-          status: 'success',
-          data,
-          message: null,
-        };
+        // For other raw responses
+        if (response !== undefined && response !== null) {
+          return { status: 'success', data: response, message: null };
+        }
+
+        // Default fallback
+        return { status: 'success', data: null, message: null };
       }),
     );
   }

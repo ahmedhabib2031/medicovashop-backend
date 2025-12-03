@@ -6,7 +6,9 @@ import { Discount, DiscountSchema } from './entities/coupon.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Discount.name, schema: DiscountSchema }]),
+    MongooseModule.forFeature([
+      { name: Discount.name, schema: DiscountSchema },
+    ]),
   ],
   controllers: [DiscountsController],
   providers: [DiscountsService],

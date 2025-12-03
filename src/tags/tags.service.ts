@@ -18,7 +18,7 @@ export class TagsService {
 
   async findAll(): Promise<Tag[]> {
     const tags = await this.tagModel.find();
-    return tags.map(tag => tag.toObject());
+    return tags.map((tag) => tag.toObject());
   }
 
   async findOne(id: string): Promise<Tag> {

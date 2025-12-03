@@ -7,7 +7,9 @@ import { UpdateDiscountDto } from './dto/update-coupon.dto';
 
 @Injectable()
 export class DiscountsService {
-  constructor(@InjectModel(Discount.name) private discountModel: Model<DiscountDocument>) {}
+  constructor(
+    @InjectModel(Discount.name) private discountModel: Model<DiscountDocument>,
+  ) {}
 
   async create(dto: CreateDiscountDto): Promise<Discount> {
     const discount = new this.discountModel(dto);
@@ -25,7 +27,9 @@ export class DiscountsService {
   }
 
   async update(id: string, dto: UpdateDiscountDto): Promise<Discount> {
-    const discount = await this.discountModel.findByIdAndUpdate(id, dto, { new: true });
+    const discount = await this.discountModel.findByIdAndUpdate(id, dto, {
+      new: true,
+    });
     if (!discount) throw new NotFoundException('Discount not found');
     return discount;
   }

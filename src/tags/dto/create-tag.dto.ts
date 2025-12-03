@@ -17,5 +17,3 @@ export class CreateTagDto {
   @IsOptional()
   descriptionEn?: string;
 }
-
-

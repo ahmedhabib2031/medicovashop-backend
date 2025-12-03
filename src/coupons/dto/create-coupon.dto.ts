@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsString, IsBoolean, IsOptional, IsDate, IsEnum, IsNumber, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsDate,
+  IsEnum,
+  IsNumber,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum CouponType {
