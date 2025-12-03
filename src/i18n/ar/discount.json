@@ -1,0 +1,7 @@
+{
+    "DISCOUNT_CREATED": "تم إنشاء الخصم بنجاح",
+    "DISCOUNTS_FETCHED": "تم جلب جميع الخصومات بنجاح",
+    "DISCOUNT_FETCHED": "تم جلب الخصم بنجاح",
+    "DISCOUNT_UPDATED": "تم تحديث الخصم بنجاح",
+    "DISCOUNT_DELETED": "تم حذف الخصم بنجاح"
+}

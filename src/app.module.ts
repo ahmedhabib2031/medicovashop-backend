@@ -20,7 +20,6 @@ import { TagsModule } from './tags/tags.module';
 import { AttributesModule } from './attributes/attributes.module';
 import { OptionsModule } from './options/options.module';
 import { SubCategoriesModule } from './sub-categories/sub-categories.module';
-import { DiscountModule } from './discount/discount.module';
 import { BrandsModule } from './brands/brands.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ConfigModule } from '@nestjs/config';
@@ -71,7 +70,6 @@ import * as path from 'path';
     AttributesModule,
     OptionsModule,
     SubCategoriesModule,
-    DiscountModule,
     BrandsModule,
     TestimonialsModule,
   ],
