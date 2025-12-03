@@ -7,5 +7,6 @@
   "USER_DELETED": "User deleted successfully",
   "PASSWORD_UPDATED": "Password updated successfully",
   "USER_ROLE_UPDATED": "User role updated successfully",
-  "USER_STATUS_UPDATED": "User status updated successfully"
+  "USER_STATUS_UPDATED": "User status updated successfully" ,
+    "IMAGE_UPLOADED": "Image Uploaded successfully"
 }

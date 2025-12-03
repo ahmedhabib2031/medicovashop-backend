@@ -8,10 +8,14 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
+import { I18nService } from 'nestjs-i18n';
 
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(private readonly uploadService: UploadService,
+        private readonly i18n: I18nService,
+    
+  ) {}
 
   private getLang(req: any): string {
     return (
@@ -32,9 +36,11 @@ export class UploadController {
     const lang = this.getLang(req);
 
     return {
-      category,
-      images: urls,
-      message: `Images uploaded successfully to category: ${category}`,
+      data: {
+        category,
+        images: urls,
+      },
+      message: await this.i18n.t('users.IMAGE_UPLOADED', { lang }),
     };
   }
 }
