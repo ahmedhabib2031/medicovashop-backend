@@ -66,7 +66,7 @@ export class UsersController {
     const lang = this.getLang(req);
     return {
       data: user,
-      message: await this.i18n.t('users.ROLE_UPDATED', { lang }),
+      message: await this.i18n.t('users.USER_ROLE_UPDATED', { lang }),
     };
   }
 

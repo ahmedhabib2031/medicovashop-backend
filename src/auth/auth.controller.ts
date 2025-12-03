@@ -37,7 +37,9 @@ export class AuthController {
       const messageKey =
         err?.response?.message || err.message || 'EMAIL_EXISTS';
       const lang = this.getLang(req);
-      throw new BadRequestException({ message: messageKey, language: lang });
+      throw new BadRequestException({
+        message: await this.i18n.t('auth.EMAIL_EXISTS', { lang }),
+      });
     }
   }
 
