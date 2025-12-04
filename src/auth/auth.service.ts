@@ -44,7 +44,7 @@ export class AuthService {
   // ==========================
   async generateTokens(user: any) {
     const payload = { id: user._id.toString(), role: user.role, language: user.language };
-    const accessToken = this.jwt.sign(payload, { expiresIn: '1d' });
+    const accessToken = this.jwt.sign(payload, { expiresIn: '1h' });
 
     const refreshToken = crypto.randomBytes(64).toString('hex');
     const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
@@ -70,7 +70,14 @@ export class AuthService {
   // ==========================
   async refreshTokens(userId: string, refreshToken: string) {
     const user = await this.usersService.findById(userId);
-    if (!user || !user.currentHashedRefreshToken) throw new UnauthorizedException('Invalid refresh token');
+    if (!user || !user.currentHashedRefreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const now = new Date();
+    if ((user as any).refreshTokenExpiresAt && now > (user as any).refreshTokenExpiresAt) {
+      throw new UnauthorizedException('Refresh token expired');
+    }
 
     const hashedToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
@@ -80,7 +87,7 @@ export class AuthService {
     // Just issue a new access token while keeping the same refresh token valid
     const safeUser: any = user;
     const payload = { id: safeUser._id.toString(), role: safeUser.role, language: safeUser.language };
-    const accessToken = this.jwt.sign(payload, { expiresIn: '1d' });
+    const accessToken = this.jwt.sign(payload, { expiresIn: '1h' });
 
     return {
       accessToken,

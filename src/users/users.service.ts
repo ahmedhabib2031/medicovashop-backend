@@ -130,6 +130,10 @@ export class UsersService {
     return { message: 'User deleted successfully' };
   }
   async updateRefreshToken(userId: string, hashedToken: string) {
-    return this.userModel.findByIdAndUpdate(userId, { currentHashedRefreshToken: hashedToken });
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks
+    return this.userModel.findByIdAndUpdate(userId, {
+      currentHashedRefreshToken: hashedToken,
+      refreshTokenExpiresAt: expiresAt,
+    });
   }
 }

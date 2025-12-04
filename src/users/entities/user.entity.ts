@@ -36,8 +36,11 @@ export class User {
   @Prop({ type: Boolean, default: true })
   active: boolean;
 
-@Prop({ type: String, default: null })
-currentHashedRefreshToken: string;
+  @Prop({ type: String, default: null })
+  currentHashedRefreshToken: string;
+
+  @Prop({ type: Date, default: null })
+  refreshTokenExpiresAt: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
