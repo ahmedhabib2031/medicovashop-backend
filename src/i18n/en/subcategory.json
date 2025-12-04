@@ -3,6 +3,7 @@
     "FETCH_SUCCESS": "Subcategory fetched successfully",
     "UPDATE_SUCCESS": "Subcategory updated successfully",
     "DELETE_SUCCESS": "Subcategory deleted successfully",
+    "STATUS_UPDATE_SUCCESS": "Subcategory status updated successfully",
     "SLUG_EXISTS": "Subcategory slug already exists",
     "CREATE_FAILED": "Failed to create subcategory",
     "SUBCATEGORY_NOT_FOUND": "Subcategory not found"

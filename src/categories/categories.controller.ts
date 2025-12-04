@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Req, UseGuards, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Req, UseGuards, BadRequestException, Query, Patch } from '@nestjs/common';
 import { CategoryService } from './categories.service';
-import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto'
+import { CreateCategoryDto, UpdateCategoryDto, UpdateCategoryStatusDto } from './dto/category.dto'
 import { I18nService } from 'nestjs-i18n';
 import { UserRole } from 'src/users/entities/user.entity';
 import { Roles } from 'src/auth/roles.decorator';
@@ -101,5 +101,20 @@ async findAll(
     return {
       message: await this.i18n.t('category.DELETE_SUCCESS', { lang }),
     };
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryStatusDto,
+    @Req() req
+  ) {
+    const category = await this.categoryService.updateStatus(id, dto);
+    const lang = this.getLang(req);
+
+    return formatResponse(
+      category,
+      await this.i18n.t('category.STATUS_UPDATE_SUCCESS', { lang }),
+    );
   }
 }

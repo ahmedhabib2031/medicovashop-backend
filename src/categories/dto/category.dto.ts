@@ -110,3 +110,9 @@ export class UpdateCategoryDto {
   @IsArray()
   metaKeywords?: string[];
 }
+
+
+export class UpdateCategoryStatusDto {
+  @IsBoolean()
+  active: boolean;
+}

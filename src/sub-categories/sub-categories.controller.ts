@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Req, Query, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Req, Query, UseGuards, BadRequestException, Patch } from '@nestjs/common';
 import { SubCategoryService } from './sub-categories.service';
-import { CreateSubCategoryDto, UpdateSubCategoryDto } from './dto/subcategory.dto';
+import { CreateSubCategoryDto, UpdateSubCategoryDto, UpdateSubCategoryStatusDto } from './dto/subcategory.dto';
 import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -90,5 +90,20 @@ export class SubCategoryController {
     await this.subCategoryService.remove(id);
     const lang = this.getLang(req);
     return formatResponse(null, await this.i18n.t('subcategory.DELETE_SUCCESS', { lang }));
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateSubCategoryStatusDto,
+    @Req() req,
+  ) {
+    const subCategory = await this.subCategoryService.updateStatus(id, dto);
+    const lang = this.getLang(req);
+
+    return formatResponse(
+      subCategory,
+      await this.i18n.t('subcategory.STATUS_UPDATE_SUCCESS', { lang }),
+    );
   }
 }

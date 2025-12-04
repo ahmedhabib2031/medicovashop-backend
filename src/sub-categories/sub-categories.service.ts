@@ -78,6 +78,18 @@ const subCategories = await this.subCategoryModel
     return updated;
   }
 
+  async updateStatus(id: string, dto: { active: boolean }): Promise<SubCategory> {
+    const updated = await this.subCategoryModel.findByIdAndUpdate(
+      id,
+      { active: dto.active },
+      { new: true },
+    );
+
+    if (!updated) throw new NotFoundException('SUBCATEGORY_NOT_FOUND');
+
+    return updated;
+  }
+
   async remove(id: string): Promise<void> {
     const deleted = await this.subCategoryModel.findByIdAndDelete(id);
     if (!deleted) throw new NotFoundException('SUBCATEGORY_NOT_FOUND');

@@ -8,5 +8,10 @@
   "PASSWORD_UPDATED": "تم تحديث كلمة المرور بنجاح",
   "USER_ROLE_UPDATED": "تم تحديث دور المستخدم بنجاح",
   "USER_STATUS_UPDATED": "تم تحديث حالة المستخدم بنجاح",
-  "IMAGE_UPLOADED":"تم رفع الصور بنجاح"
+  "USER_ACTIVATED": "تم تفعيل المستخدم بنجاح",
+  "USER_DEACTIVATED": "تم إلغاء تفعيل المستخدم بنجاح",
+  "PROFILE_UPDATED": "تم تحديث الملف الشخصي بنجاح",
+  "ALL_SELLERS_FETCHED": "تم جلب جميع البائعين بنجاح",
+  "ALL_ADMINS_FETCHED": "تم جلب جميع المدراء بنجاح",
+  "IMAGE_UPLOADED": "تم رفع الصور بنجاح"
 }

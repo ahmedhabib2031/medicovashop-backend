@@ -7,6 +7,11 @@
   "USER_DELETED": "User deleted successfully",
   "PASSWORD_UPDATED": "Password updated successfully",
   "USER_ROLE_UPDATED": "User role updated successfully",
-  "USER_STATUS_UPDATED": "User status updated successfully" ,
-    "IMAGE_UPLOADED": "Image Uploaded successfully"
+  "USER_STATUS_UPDATED": "User status updated successfully",
+  "USER_ACTIVATED": "User activated successfully",
+  "USER_DEACTIVATED": "User deactivated successfully",
+  "PROFILE_UPDATED": "Profile updated successfully",
+  "ALL_SELLERS_FETCHED": "All sellers fetched successfully",
+  "ALL_ADMINS_FETCHED": "All admins fetched successfully",
+  "IMAGE_UPLOADED": "Image uploaded successfully"
 }

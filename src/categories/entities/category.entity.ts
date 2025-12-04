@@ -33,8 +33,8 @@ export class Category {
   @Prop({ required: true })
   description: string;
     
-    @Prop({ required: true, default: true })
-    active: boolean;
+  @Prop({ required: true, default: true })
+  active: boolean;
 
   // ---- SEO Meta ----
   @Prop()

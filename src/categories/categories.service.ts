@@ -83,4 +83,18 @@ async findAll(query: {
     if (!result) throw new NotFoundException('CATEGORY_NOT_FOUND');
     return { deleted: true };
   }
+
+  async updateStatus(id: string, dto: { active: boolean }) {
+  const updated = await this.categoryModel.findByIdAndUpdate(
+    id,
+    { active: dto.active },
+    { new: true }
+  );
+
+  if (!updated) throw new NotFoundException('CATEGORY_NOT_FOUND');
+
+  return updated;
+}
+
+
 }

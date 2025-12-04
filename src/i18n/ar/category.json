@@ -3,6 +3,7 @@
     "FETCH_SUCCESS": "تم جلب الفئة بنجاح",
     "UPDATE_SUCCESS": "تم تحديث الفئة بنجاح",
     "DELETE_SUCCESS": "تم حذف الفئة بنجاح",
+    "STATUS_UPDATE_SUCCESS": "تم تحديث حالة الفئة بنجاح",
     "CATEGORY_NOT_FOUND": "الفئة غير موجودة",
     "SLUG_EXISTS": "الاسم المختصر موجود بالفعل",
     "SLUG_AR_EXISTS": "الاسم المختصر العربي موجود بالفعل",

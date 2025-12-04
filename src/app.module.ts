@@ -20,10 +20,11 @@ import { TagsModule } from './tags/tags.module';
 import { AttributesModule } from './attributes/attributes.module';
 import { OptionsModule } from './options/options.module';
 import { SubCategoryModule } from './sub-categories/sub-categories.module';
-import { BrandsModule } from './brands/brands.module';
+import { BrandModule } from './brands/brands.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
+import { SubcategoryChildModule } from './subcategory-child/subcategory-child.module';
 import { ConfigModule } from '@nestjs/config';
-import { UploadModule } from './upload/upload.module';  // <<<<<< IMPORTANT
+import { UploadModule } from './upload/upload.module';
 
 import {
   I18nModule,
@@ -70,7 +71,8 @@ import * as path from 'path';
     AttributesModule,
     OptionsModule,
     SubCategoryModule,
-    BrandsModule,
+    SubcategoryChildModule,
+    BrandModule,
     TestimonialsModule,
   ],
   controllers: [AppController],

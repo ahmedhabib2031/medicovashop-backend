@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
-import { BrandsService } from './brands.service';
-import { BrandsController } from './brands.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { BrandController } from './brands.controller';
+import { BrandService } from './brands.service';
+import { Brand, BrandSchema } from './entities/brand.entity';
 
 @Module({
-  controllers: [BrandsController],
-  providers: [BrandsService],
+  imports: [
+    MongooseModule.forFeature([{ name: Brand.name, schema: BrandSchema }]),
+  ],
+  controllers: [BrandController],
+  providers: [BrandService],
 })
-export class BrandsModule {}
+export class BrandModule {}

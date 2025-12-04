@@ -61,3 +61,8 @@ export class CreateSubCategoryDto {
 }
 
 export class UpdateSubCategoryDto extends CreateSubCategoryDto {}
+
+export class UpdateSubCategoryStatusDto {
+  @IsBoolean()
+  active: boolean;
+}

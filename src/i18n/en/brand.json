@@ -1,0 +1,15 @@
+{
+  "CREATE_SUCCESS": "Brand created successfully",
+  "FETCH_SUCCESS": "Brand fetched successfully",
+  "UPDATE_SUCCESS": "Brand updated successfully",
+  "DELETE_SUCCESS": "Brand deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Brand status updated successfully",
+  "BRAND_NOT_FOUND": "Brand not found",
+  "SLUG_EXISTS": "Slug already exists",
+  "SLUG_AR_EXISTS": "Arabic slug already exists",
+  "CREATE_FAILED": "Failed to create brand",
+  "UPDATE_FAILED": "Failed to update brand",
+  "DELETE_FAILED": "Failed to delete brand"
+}
+
+

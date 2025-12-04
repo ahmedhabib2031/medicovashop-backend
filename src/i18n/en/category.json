@@ -3,6 +3,7 @@
     "FETCH_SUCCESS": "Category fetched successfully",
     "UPDATE_SUCCESS": "Category updated successfully",
     "DELETE_SUCCESS": "Category deleted successfully",
+    "STATUS_UPDATE_SUCCESS": "Category status updated successfully",
     "CATEGORY_NOT_FOUND": "Category not found",
     "SLUG_EXISTS": "Slug already exists",
     "SLUG_AR_EXISTS": "Arabic slug already exists",
