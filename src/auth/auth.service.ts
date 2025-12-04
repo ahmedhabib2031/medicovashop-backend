@@ -76,7 +76,24 @@ export class AuthService {
 
     if (hashedToken !== user.currentHashedRefreshToken) throw new UnauthorizedException('Invalid refresh token');
 
-    return this.generateTokens(user);
+    // Do NOT rotate the refresh token here so it can be reused
+    // Just issue a new access token while keeping the same refresh token valid
+    const safeUser: any = user;
+    const payload = { id: safeUser._id.toString(), role: safeUser.role, language: safeUser.language };
+    const accessToken = this.jwt.sign(payload, { expiresIn: '1d' });
+
+    return {
+      accessToken,
+      refreshToken, // same token sent by client
+      user: {
+        id: safeUser._id.toString(),
+        email: safeUser.email,
+        role: safeUser.role,
+        firstName: safeUser.firstName,
+        lastName: safeUser.lastName,
+        language: safeUser.language,
+      },
+    };
   }
 
   async getUserByEmail(email: string) {
