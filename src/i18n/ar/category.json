@@ -1,0 +1,12 @@
+{
+    "CREATE_SUCCESS": "تم إنشاء الفئة بنجاح",
+    "FETCH_SUCCESS": "تم جلب الفئة بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث الفئة بنجاح",
+    "DELETE_SUCCESS": "تم حذف الفئة بنجاح",
+    "CATEGORY_NOT_FOUND": "الفئة غير موجودة",
+    "SLUG_EXISTS": "الاسم المختصر موجود بالفعل",
+    "SLUG_AR_EXISTS": "الاسم المختصر العربي موجود بالفعل",
+    "CREATE_FAILED": "فشل في إنشاء الفئة",
+    "UPDATE_FAILED": "فشل في تحديث الفئة",
+    "DELETE_FAILED": "فشل في حذف الفئة"
+}

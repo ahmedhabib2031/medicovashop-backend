@@ -129,4 +129,7 @@ export class UsersService {
     if (!result) throw new NotFoundException('User not found');
     return { message: 'User deleted successfully' };
   }
+  async updateRefreshToken(userId: string, hashedToken: string) {
+    return this.userModel.findByIdAndUpdate(userId, { currentHashedRefreshToken: hashedToken });
+  }
 }

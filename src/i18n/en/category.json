@@ -1,0 +1,12 @@
+{
+    "CREATE_SUCCESS": "Category created successfully",
+    "FETCH_SUCCESS": "Category fetched successfully",
+    "UPDATE_SUCCESS": "Category updated successfully",
+    "DELETE_SUCCESS": "Category deleted successfully",
+    "CATEGORY_NOT_FOUND": "Category not found",
+    "SLUG_EXISTS": "Slug already exists",
+    "SLUG_AR_EXISTS": "Arabic slug already exists",
+    "CREATE_FAILED": "Failed to create category",
+    "UPDATE_FAILED": "Failed to update category",
+    "DELETE_FAILED": "Failed to delete category"
+}

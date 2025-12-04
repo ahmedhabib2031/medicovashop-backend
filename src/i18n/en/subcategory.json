@@ -1,0 +1,9 @@
+{
+    "CREATE_SUCCESS": "Subcategory created successfully",
+    "FETCH_SUCCESS": "Subcategory fetched successfully",
+    "UPDATE_SUCCESS": "Subcategory updated successfully",
+    "DELETE_SUCCESS": "Subcategory deleted successfully",
+    "SLUG_EXISTS": "Subcategory slug already exists",
+    "CREATE_FAILED": "Failed to create subcategory",
+    "SUBCATEGORY_NOT_FOUND": "Subcategory not found"
+}

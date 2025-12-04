@@ -12,14 +12,14 @@ import { PaymentsModule } from './payments/payments.module';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
-import { CategoriesModule } from './categories/categories.module';
+import { CategoryModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { AdminModule } from './admin/admin.module';
 import { SellersModule } from './sellers/sellers.module';
 import { TagsModule } from './tags/tags.module';
 import { AttributesModule } from './attributes/attributes.module';
 import { OptionsModule } from './options/options.module';
-import { SubCategoriesModule } from './sub-categories/sub-categories.module';
+import { SubCategoryModule } from './sub-categories/sub-categories.module';
 import { BrandsModule } from './brands/brands.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ConfigModule } from '@nestjs/config';
@@ -54,7 +54,7 @@ import * as path from 'path';
     SellersModule,
     AdminModule,
     ProductsModule,
-    CategoriesModule,
+    CategoryModule,
     OrdersModule,
     AuthModule,
     CartModule,
@@ -69,7 +69,7 @@ import * as path from 'path';
     TagsModule,
     AttributesModule,
     OptionsModule,
-    SubCategoriesModule,
+    SubCategoryModule,
     BrandsModule,
     TestimonialsModule,
   ],

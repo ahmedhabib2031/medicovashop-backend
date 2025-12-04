@@ -35,6 +35,9 @@ export class User {
 
   @Prop({ type: Boolean, default: true })
   active: boolean;
+
+@Prop({ type: String, default: null })
+currentHashedRefreshToken: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
