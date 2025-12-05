@@ -12,9 +12,27 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule,
     {
       cors: {
-        origin: '*', // Or use a specific origin: ['https://your-frontend.com']
-        methods: 'GET,POST,PATCH,DELETE,PUT',
-        allowedHeaders: 'Content-Type, Authorization',
+        origin: (origin, callback) => {
+          // Allow requests with no origin (like mobile apps or curl requests)
+          if (!origin) return callback(null, true);
+          
+          // Allow specific origins: localhost and production shop domain
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'https://shop.medicova.net',
+          ];
+          
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          
+          // Allow all other origins
+          return callback(null, true);
+        },
+        methods: 'GET,POST,PATCH,DELETE,PUT,OPTIONS',
+        allowedHeaders: 'Content-Type, Authorization, x-user-id, x-lang, accept-language',
+        credentials: true,
       },
     }
   );
