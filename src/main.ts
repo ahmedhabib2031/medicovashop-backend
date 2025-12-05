@@ -9,33 +9,35 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule,
-    {
-      cors: {
-        origin: (origin, callback) => {
-          // Allow requests with no origin (like mobile apps or curl requests)
-          if (!origin) return callback(null, true);
-          
-          // Allow specific origins: localhost and production shop domain
-          const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'https://shop.medicova.net',
-          ];
-          
-          if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-          }
-          
-          // Allow all other origins
-          return callback(null, true);
-        },
-        methods: 'GET,POST,PATCH,DELETE,PUT,OPTIONS',
-        allowedHeaders: 'Content-Type, Authorization, x-user-id, x-lang, accept-language',
-        credentials: true,
-      },
-    }
-  );
+  const app = await NestFactory.create(AppModule);
+
+  // Enable CORS globally with explicit configuration
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Allow specific origins: localhost and production shop domain
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://shop.medicova.net',
+        'http://shop.medicova.net', // Also allow http version
+      ];
+      
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Allow all other origins
+      return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-lang', 'accept-language', 'X-Requested-With'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
 
   app.setGlobalPrefix('api/v1');
 
