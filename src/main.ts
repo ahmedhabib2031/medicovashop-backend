@@ -24,6 +24,10 @@ async function bootstrap() {
         'http://localhost:3001',
         'https://shop.medicova.net',
         'http://shop.medicova.net', // Also allow http version
+        'https://www.medicova.cloud',
+        'https://medicova.cloud',
+        'https://medicova.cloud/'
+
       ];
       
       if (allowedOrigins.includes(origin)) {
