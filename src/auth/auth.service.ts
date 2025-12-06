@@ -121,8 +121,9 @@ export class AuthService {
 
     if (existingUser) {
       // User exists, update googleId if not set
-      if (!(existingUser as any).googleId) {
-        await this.usersService.updateSocialId(existingUser._id.toString(), 'googleId', user.googleId);
+      const safeUser: any = existingUser;
+      if (!safeUser.googleId) {
+        await this.usersService.updateSocialId(safeUser._id.toString(), 'googleId', user.googleId);
       }
       return this.generateTokens(existingUser);
     }
@@ -160,8 +161,9 @@ export class AuthService {
 
     if (existingUser) {
       // User exists, update facebookId if not set
-      if (!(existingUser as any).facebookId) {
-        await this.usersService.updateSocialId(existingUser._id.toString(), 'facebookId', user.facebookId);
+      const safeUser: any = existingUser;
+      if (!safeUser.facebookId) {
+        await this.usersService.updateSocialId(safeUser._id.toString(), 'facebookId', user.facebookId);
       }
       return this.generateTokens(existingUser);
     }
