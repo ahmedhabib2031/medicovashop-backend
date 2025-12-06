@@ -137,15 +137,4 @@ export class UsersService {
       refreshTokenExpiresAt: expiresAt,
     });
   }
-
-  // Find user by social ID (googleId or facebookId)
-  async findBySocialId(field: 'googleId' | 'facebookId', socialId: string): Promise<User | null> {
-    const user = await this.userModel.findOne({ [field]: socialId });
-    return user ? user.toObject() : null;
-  }
-
-  // Update user's social ID
-  async updateSocialId(userId: string, field: 'googleId' | 'facebookId', socialId: string): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, { [field]: socialId });
-  }
 }
