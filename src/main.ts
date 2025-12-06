@@ -26,7 +26,8 @@ async function bootstrap() {
         'http://shop.medicova.net', // Also allow http version
         'https://www.medicova.cloud',
         'https://medicova.cloud',
-        'https://medicova.cloud/'
+        'https://medicova.cloud/',
+        'http://62.72.18.209'
 
       ];
       
