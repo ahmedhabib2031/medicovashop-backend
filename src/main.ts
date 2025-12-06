@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { TranslationInterceptor } from './common/interceptors/translation.interceptor';
 import { I18nService } from 'nestjs-i18n';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -74,7 +75,47 @@ async function bootstrap() {
   // Global response wrapper
   app.useGlobalInterceptors(new ResponseInterceptor());
 
+  // Swagger Documentation
+  const config = new DocumentBuilder()
+    .setTitle('Medicova API')
+    .setDescription('Medicova E-commerce API Documentation')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addTag('Auth', 'Authentication endpoints')
+    .addTag('Users', 'User management endpoints')
+    .addTag('Categories', 'Category management endpoints')
+    .addTag('Subcategories', 'Subcategory management endpoints')
+    .addTag('Subcategory Child', 'Subcategory child management endpoints')
+    .addTag('Brands', 'Brand management endpoints')
+    .addTag('Products', 'Product management endpoints')
+    .addTag('Orders', 'Order management endpoints')
+    .addTag('Cart', 'Shopping cart endpoints')
+    .addTag('Coupons', 'Coupon/Discount management endpoints')
+    .addTag('Tags', 'Tag management endpoints')
+    .addTag('Reviews', 'Review management endpoints')
+    .addServer('http://localhost:3000', 'Development server')
+    .addServer('http://82.112.255.49', 'Production server')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
   await app.listen(3000);
   console.log(`Server running on http://localhost:3000/api/v1`);
+  console.log(`Swagger docs available at http://localhost:3000/api/docs`);
 }
 bootstrap();

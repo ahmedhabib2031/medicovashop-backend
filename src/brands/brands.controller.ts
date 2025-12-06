@@ -3,6 +3,7 @@ import {
   BadRequestException, UseGuards,
   Patch
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { BrandService } from './brands.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto, UpdateBrandStatusDto } from './dto/update-brand.dto';
@@ -13,6 +14,8 @@ import { UserRole } from 'src/users/entities/user.entity';
 import { I18nService } from 'nestjs-i18n';
 import { formatResponse } from 'src/common/utils/response.util';
 
+@ApiTags('Brands')
+@ApiBearerAuth('JWT-auth')
 @Controller('brands')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)

@@ -1,10 +1,12 @@
 import { Controller, Post, Body, Req, UseGuards, Get, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { I18nService } from 'nestjs-i18n';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -17,6 +19,9 @@ export class AuthController {
   }
 
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user', description: 'Create a new user account' })
+  @ApiResponse({ status: 201, description: 'User successfully registered' })
+  @ApiResponse({ status: 400, description: 'Email already exists' })
   async register(@Body() dto: RegisterDto, @Req() req) {
     try {
       const result = await this.authService.register(dto);
@@ -34,6 +39,9 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'User login', description: 'Authenticate user and get access token' })
+  @ApiResponse({ status: 200, description: 'User successfully logged in' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto, @Req() req) {
     const result = await this.authService.login(dto);
     const user = await this.authService.getUserByEmail(dto.email);
@@ -47,6 +55,11 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
+  @ApiOperation({ summary: 'Refresh access token', description: 'Get a new access token using refresh token' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiHeader({ name: 'x-user-id', description: 'User ID', required: true })
+  @ApiResponse({ status: 200, description: 'Token successfully refreshed' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(@Req() req) {
     const refreshToken = req.refreshToken;
     const userId = req.headers['x-user-id'];

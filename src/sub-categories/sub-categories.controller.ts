@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Req, Query, UseGuards, BadRequestException, Patch } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { SubCategoryService } from './sub-categories.service';
 import { CreateSubCategoryDto, UpdateSubCategoryDto, UpdateSubCategoryStatusDto } from './dto/subcategory.dto';
 import { I18nService } from 'nestjs-i18n';
@@ -8,6 +9,8 @@ import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/users/entities/user.entity';
 import { formatResponse } from 'src/common/utils/response.util';
 
+@ApiTags('Subcategories')
+@ApiBearerAuth('JWT-auth')
 @Controller('subcategory')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
@@ -22,6 +25,9 @@ export class SubCategoryController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new subcategory', description: 'Create a new subcategory (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Subcategory successfully created' })
+  @ApiResponse({ status: 400, description: 'Bad request - slug already exists' })
   async create(@Body() dto: CreateSubCategoryDto, @Req() req) {
     try {
       const subCategory = await this.subCategoryService.create(dto);
@@ -38,6 +44,12 @@ export class SubCategoryController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all subcategories', description: 'Get paginated list of subcategories with optional filters' })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'parentCategory', required: false, type: String, description: 'Filter by parent category ID' })
+  @ApiResponse({ status: 200, description: 'Subcategories retrieved successfully' })
   async findAll(
     @Query('page') page: string,
     @Query('limit') limit: string,
@@ -72,6 +84,9 @@ export class SubCategoryController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get subcategory by ID', description: 'Get a single subcategory by its ID' })
+  @ApiParam({ name: 'id', description: 'Subcategory ID' })
+  @ApiResponse({ status: 200, description: 'Subcategory retrieved successfully' })
   async findOne(@Param('id') id: string, @Req() req) {
     const subCategory = await this.subCategoryService.findOne(id);
     const lang = this.getLang(req);
@@ -79,6 +94,9 @@ export class SubCategoryController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update subcategory', description: 'Update an existing subcategory' })
+  @ApiParam({ name: 'id', description: 'Subcategory ID' })
+  @ApiResponse({ status: 200, description: 'Subcategory successfully updated' })
   async update(@Param('id') id: string, @Body() dto: UpdateSubCategoryDto, @Req() req) {
     const subCategory = await this.subCategoryService.update(id, dto);
     const lang = this.getLang(req);
@@ -86,6 +104,9 @@ export class SubCategoryController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete subcategory', description: 'Delete a subcategory by ID' })
+  @ApiParam({ name: 'id', description: 'Subcategory ID' })
+  @ApiResponse({ status: 200, description: 'Subcategory successfully deleted' })
   async remove(@Param('id') id: string, @Req() req) {
     await this.subCategoryService.remove(id);
     const lang = this.getLang(req);
@@ -93,6 +114,9 @@ export class SubCategoryController {
   }
 
   @Patch(':id/status')
+  @ApiOperation({ summary: 'Update subcategory status', description: 'Update the active status of a subcategory' })
+  @ApiParam({ name: 'id', description: 'Subcategory ID' })
+  @ApiResponse({ status: 200, description: 'Subcategory status successfully updated' })
   async updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateSubCategoryStatusDto,

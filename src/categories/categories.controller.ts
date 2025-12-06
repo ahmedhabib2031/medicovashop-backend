@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Req, UseGuards, BadRequestException, Query, Patch } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { CategoryService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto, UpdateCategoryStatusDto } from './dto/category.dto'
 import { I18nService } from 'nestjs-i18n';
@@ -8,6 +9,8 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { formatResponse } from 'src/common/utils/response.util';
 
+@ApiTags('Categories')
+@ApiBearerAuth('JWT-auth')
 @Controller('category')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
@@ -22,6 +25,9 @@ export class CategoryController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new category', description: 'Create a new category (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Category successfully created' })
+  @ApiResponse({ status: 400, description: 'Bad request - slug already exists' })
   async create(@Body() dto: CreateCategoryDto, @Req() req) {
     try {
       const category = await this.categoryService.create(dto);
@@ -40,13 +46,18 @@ export class CategoryController {
   }
 
 
-@Get()
-async findAll(
-  @Query('page') page: string,
-  @Query('limit') limit: string,
-  @Query('search') search: string,
-  @Req() req,
-) {
+  @Get()
+  @ApiOperation({ summary: 'Get all categories', description: 'Get paginated list of categories with optional search' })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10, description: 'Items per page' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term' })
+  @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })
+  async findAll(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('search') search: string,
+    @Req() req,
+  ) {
   const pageNum = parseInt(page) || 1;
   const limitNum = parseInt(limit) || 10;
 
@@ -75,6 +86,10 @@ async findAll(
 
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get category by ID', description: 'Get a single category by its ID' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
   async findOne(@Param('id') id: string, @Req() req) {
     const category = await this.categoryService.findOne(id);
     const lang = this.getLang(req);
@@ -85,6 +100,10 @@ async findAll(
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update category', description: 'Update an existing category' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category successfully updated' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
   async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto, @Req() req) {
     const category = await this.categoryService.update(id, dto);
     const lang = this.getLang(req);
@@ -95,6 +114,10 @@ async findAll(
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete category', description: 'Delete a category by ID' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category successfully deleted' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
   async remove(@Param('id') id: string, @Req() req) {
     await this.categoryService.remove(id);
     const lang = this.getLang(req);
@@ -104,6 +127,10 @@ async findAll(
   }
 
   @Patch(':id/status')
+  @ApiOperation({ summary: 'Update category status', description: 'Update the active status of a category' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category status successfully updated' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
   async updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateCategoryStatusDto,
