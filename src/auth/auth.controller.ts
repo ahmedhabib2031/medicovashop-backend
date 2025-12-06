@@ -2,8 +2,10 @@ import { Controller, Post, Body, Req, UseGuards, Get, BadRequestException, Unaut
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto, FacebookLoginDto } from './dto/social-login.dto';
 import { I18nService } from 'nestjs-i18n';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -58,5 +60,83 @@ export class AuthController {
       data: tokens,
       message: await this.i18n.t('auth.TOKEN_REFRESHED', { lang: tokens.user.language || 'en' }),
     };
+  }
+
+  // Google OAuth
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // Guard redirects to Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(@Req() req) {
+    const user = req.user;
+    const result = await this.authService.googleLogin(user);
+    const lang = this.getLang(req, result.user);
+
+    return {
+      data: result,
+      message: await this.i18n.t('auth.LOGIN_SUCCESS', { lang }),
+    };
+  }
+
+  // Facebook OAuth
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuth() {
+    // Guard redirects to Facebook
+  }
+
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuthCallback(@Req() req) {
+    const user = req.user;
+    const result = await this.authService.facebookLogin(user);
+    const lang = this.getLang(req, result.user);
+
+    return {
+      data: result,
+      message: await this.i18n.t('auth.LOGIN_SUCCESS', { lang }),
+    };
+  }
+
+  // ==========================
+  // POSTMAN TEST ENDPOINTS (Direct token verification)
+  // ==========================
+
+  @Post('google/token')
+  async googleTokenLogin(@Body() dto: GoogleLoginDto, @Req() req) {
+    try {
+      const result = await this.authService.verifyGoogleToken(dto.accessToken);
+      const lang = this.getLang(req, result.user);
+
+      return {
+        data: result,
+        message: await this.i18n.t('auth.LOGIN_SUCCESS', { lang }),
+      };
+    } catch (error) {
+      throw new UnauthorizedException({
+        message: error.message || 'Failed to authenticate with Google',
+      });
+    }
+  }
+
+  @Post('facebook/token')
+  async facebookTokenLogin(@Body() dto: FacebookLoginDto, @Req() req) {
+    try {
+      const result = await this.authService.verifyFacebookToken(dto.accessToken);
+      const lang = this.getLang(req, result.user);
+
+      return {
+        data: result,
+        message: await this.i18n.t('auth.LOGIN_SUCCESS', { lang }),
+      };
+    } catch (error) {
+      throw new UnauthorizedException({
+        message: error.message || 'Failed to authenticate with Facebook',
+      });
+    }
   }
 }

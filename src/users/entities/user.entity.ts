@@ -41,6 +41,13 @@ export class User {
 
   @Prop({ type: Date, default: null })
   refreshTokenExpiresAt: Date | null;
+
+  // Social auth fields
+  @Prop({ type: String, default: null })
+  googleId: string | null;
+
+  @Prop({ type: String, default: null })
+  facebookId: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

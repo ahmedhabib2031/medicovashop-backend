@@ -129,11 +129,23 @@ export class UsersService {
     if (!result) throw new NotFoundException('User not found');
     return { message: 'User deleted successfully' };
   }
+  
   async updateRefreshToken(userId: string, hashedToken: string) {
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks
     return this.userModel.findByIdAndUpdate(userId, {
       currentHashedRefreshToken: hashedToken,
       refreshTokenExpiresAt: expiresAt,
     });
+  }
+
+  // Find user by social ID (googleId or facebookId)
+  async findBySocialId(field: 'googleId' | 'facebookId', socialId: string): Promise<User | null> {
+    const user = await this.userModel.findOne({ [field]: socialId });
+    return user ? user.toObject() : null;
+  }
+
+  // Update user's social ID
+  async updateSocialId(userId: string, field: 'googleId' | 'facebookId', socialId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, { [field]: socialId });
   }
 }

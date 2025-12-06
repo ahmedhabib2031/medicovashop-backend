@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -105,5 +106,133 @@ export class AuthService {
 
   async getUserByEmail(email: string) {
     return this.usersService.findByEmail(email);
+  }
+
+  // ==========================
+  // GOOGLE AUTH
+  // ==========================
+  async googleLogin(user: any) {
+    if (!user.email) {
+      throw new BadRequestException('No email provided from Google');
+    }
+
+    // Check if user exists by email
+    let existingUser = await this.usersService.findByEmail(user.email);
+
+    if (existingUser) {
+      // User exists, update googleId if not set
+      if (!(existingUser as any).googleId) {
+        await this.usersService.updateSocialId(existingUser._id.toString(), 'googleId', user.googleId);
+      }
+      return this.generateTokens(existingUser);
+    }
+
+    // Check if user exists by googleId
+    existingUser = await this.usersService.findBySocialId('googleId', user.googleId);
+    if (existingUser) {
+      return this.generateTokens(existingUser);
+    }
+
+    // Create new user
+    const newUser = await this.usersService.create({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      password: crypto.randomBytes(32).toString('hex'), // Random password for social auth
+      googleId: user.googleId,
+      role: UserRole.USER,
+      language: 'en',
+    });
+
+    return this.generateTokens(newUser);
+  }
+
+  // ==========================
+  // FACEBOOK AUTH
+  // ==========================
+  async facebookLogin(user: any) {
+    if (!user.email) {
+      throw new BadRequestException('No email provided from Facebook');
+    }
+
+    // Check if user exists by email
+    let existingUser = await this.usersService.findByEmail(user.email);
+
+    if (existingUser) {
+      // User exists, update facebookId if not set
+      if (!(existingUser as any).facebookId) {
+        await this.usersService.updateSocialId(existingUser._id.toString(), 'facebookId', user.facebookId);
+      }
+      return this.generateTokens(existingUser);
+    }
+
+    // Check if user exists by facebookId
+    existingUser = await this.usersService.findBySocialId('facebookId', user.facebookId);
+    if (existingUser) {
+      return this.generateTokens(existingUser);
+    }
+
+    // Create new user
+    const newUser = await this.usersService.create({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      password: crypto.randomBytes(32).toString('hex'), // Random password for social auth
+      facebookId: user.facebookId,
+      role: UserRole.USER,
+      language: 'en',
+    });
+
+    return this.generateTokens(newUser);
+  }
+
+  // ==========================
+  // VERIFY GOOGLE TOKEN (for Postman testing)
+  // ==========================
+  async verifyGoogleToken(accessToken: string) {
+    try {
+      const response = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
+      if (!response.ok) {
+        throw new UnauthorizedException('Invalid Google token');
+      }
+      const googleUser = await response.json();
+      
+      const user = {
+        email: googleUser.email,
+        firstName: googleUser.given_name,
+        lastName: googleUser.family_name,
+        googleId: googleUser.id,
+        picture: googleUser.picture,
+      };
+
+      return this.googleLogin(user);
+    } catch (error) {
+      throw new UnauthorizedException('Failed to verify Google token');
+    }
+  }
+
+  // ==========================
+  // VERIFY FACEBOOK TOKEN (for Postman testing)
+  // ==========================
+  async verifyFacebookToken(accessToken: string) {
+    try {
+      const response = await fetch(`https://graph.facebook.com/me?fields=id,email,first_name,last_name,picture&access_token=${accessToken}`);
+      if (!response.ok) {
+        throw new UnauthorizedException('Invalid Facebook token');
+      }
+      const facebookUser = await response.json();
+      
+      const user = {
+        email: facebookUser.email,
+        firstName: facebookUser.first_name,
+        lastName: facebookUser.last_name,
+        facebookId: facebookUser.id,
+        picture: facebookUser.picture?.data?.url,
+      };
+
+      return this.facebookLogin(user);
+    } catch (error) {
+      throw new UnauthorizedException('Failed to verify Facebook token');
+    }
   }
 }
