@@ -13,5 +13,6 @@
   "PROFILE_UPDATED": "Profile updated successfully",
   "ALL_SELLERS_FETCHED": "All sellers fetched successfully",
   "ALL_ADMINS_FETCHED": "All admins fetched successfully",
-  "IMAGE_UPLOADED": "Image uploaded successfully"
+  "IMAGE_UPLOADED": "Image uploaded successfully",
+  "SELLER_PROFILE_UPDATED":"Seller Data updated successfully"
 }

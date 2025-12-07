@@ -13,5 +13,6 @@
   "PROFILE_UPDATED": "تم تحديث الملف الشخصي بنجاح",
   "ALL_SELLERS_FETCHED": "تم جلب جميع البائعين بنجاح",
   "ALL_ADMINS_FETCHED": "تم جلب جميع المدراء بنجاح",
-  "IMAGE_UPLOADED": "تم رفع الصور بنجاح"
+  "IMAGE_UPLOADED": "تم رفع الصور بنجاح",
+  "SELLER_PROFILE_UPDATED":"تم تحديث بيانات البائع"
 }
