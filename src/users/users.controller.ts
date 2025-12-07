@@ -165,4 +165,19 @@ export class UsersController {
       message: await this.i18n.t('users.USER_DELETED', { lang }),
     };
   }
+
+@Put('seller/me')
+@Roles(UserRole.SELLER)
+async updateSellerProfile(@Req() req, @Body() body) {
+  const sellerId = req.user.id;
+
+  const updated = await this.usersService.updateSellerProfile(sellerId, body);
+
+  const lang = this.getLang(req);
+  return {
+    data: updated,
+    message: await this.i18n.t('users.SELLER_PROFILE_UPDATED', { lang }),
+  };
+}
+
 }

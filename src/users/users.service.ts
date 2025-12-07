@@ -137,4 +137,35 @@ export class UsersService {
       refreshTokenExpiresAt: expiresAt,
     });
   }
+
+  // users.service.ts
+
+async updateSellerProfile(id: string, data: Partial<User>): Promise<User> {
+  const allowedFields = [
+    'firstName',
+    'lastName',
+    'phone',
+    'country',
+    'state',
+    'city',
+    'profileImage',
+  ];
+
+  const updateData = {};
+  for (const key of allowedFields) {
+    if (data[key] !== undefined) updateData[key] = data[key];
+  }
+
+  const user = await this.userModel.findByIdAndUpdate(id, updateData, {
+    new: true,
+  });
+
+  if (!user) throw new NotFoundException('Seller not found');
+
+  const obj = user.toObject();
+  delete obj.password;
+  return obj;
+}
+
+
 }
