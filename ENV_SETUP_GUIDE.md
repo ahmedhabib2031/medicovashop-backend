@@ -295,3 +295,4 @@ After setting up your `.env` file:
 - Verify all environment variables are set: `console.log(process.env)`
 - Test each service individually (database, OAuth, S3)
 
+

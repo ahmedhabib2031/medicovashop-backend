@@ -1,0 +1,14 @@
+{
+  "CREATE_SUCCESS": "تم إنشاء المنتج بنجاح",
+  "FETCH_SUCCESS": "تم جلب المنتج بنجاح",
+  "UPDATE_SUCCESS": "تم تحديث المنتج بنجاح",
+  "DELETE_SUCCESS": "تم حذف المنتج بنجاح",
+  "STATUS_UPDATE_SUCCESS": "تم تحديث حالة المنتج بنجاح",
+  "PRODUCT_NOT_FOUND": "المنتج غير موجود",
+  "PRODUCT_SKU_EXISTS": "رمز المنتج موجود بالفعل",
+  "PRODUCT_PERMALINK_EXISTS": "رابط المنتج موجود بالفعل",
+  "CREATE_FAILED": "فشل إنشاء المنتج",
+  "UPDATE_FAILED": "فشل تحديث المنتج",
+  "DELETE_FAILED": "فشل حذف المنتج"
+}
+

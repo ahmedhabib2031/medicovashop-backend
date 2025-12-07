@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole } from './entities/user.entity';
@@ -58,7 +58,9 @@ export class UsersService {
       $or: [
         { firstName: { $regex: query, $options: 'i' } },
         { lastName: { $regex: query, $options: 'i' } },
+        { fullName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
+        { SellerContactEmail: { $regex: query, $options: 'i' } },
       ],
     });
 
@@ -95,13 +97,29 @@ export class UsersService {
     return obj;
   }
 
-  // Reset password
-  async resetPassword(id: string, password: string): Promise<void> {
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await this.userModel.findByIdAndUpdate(id, {
-      password: hashed,
-    });
+  // Update password (User updates their own password)
+  async updatePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Hash and update to new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await this.userModel.findByIdAndUpdate(userId, {
+      password: hashedNewPassword,
+    });
   }
 
   // Get all admins
@@ -138,34 +156,14 @@ export class UsersService {
     });
   }
 
-  // users.service.ts
-
-async updateSellerProfile(id: string, data: Partial<User>): Promise<User> {
-  const allowedFields = [
-    'firstName',
-    'lastName',
-    'phone',
-    'country',
-    'state',
-    'city',
-    'profileImage',
-  ];
-
-  const updateData = {};
-  for (const key of allowedFields) {
-    if (data[key] !== undefined) updateData[key] = data[key];
+  // Update seller profile
+  async updateSellerProfile(sellerId: string, data: Partial<User>): Promise<User> {
+    const user = await this.userModel.findByIdAndUpdate(sellerId, data, {
+      new: true,
+    });
+    if (!user) throw new NotFoundException('Seller not found');
+    const obj = user.toObject();
+    delete obj.password;
+    return obj as any;
   }
-
-  const user = await this.userModel.findByIdAndUpdate(id, updateData, {
-    new: true,
-  });
-
-  if (!user) throw new NotFoundException('Seller not found');
-
-  const obj = user.toObject();
-  delete obj.password;
-  return obj;
-}
-
-
 }

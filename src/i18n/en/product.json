@@ -1,0 +1,14 @@
+{
+  "CREATE_SUCCESS": "Product created successfully",
+  "FETCH_SUCCESS": "Product fetched successfully",
+  "UPDATE_SUCCESS": "Product updated successfully",
+  "DELETE_SUCCESS": "Product deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Product status updated successfully",
+  "PRODUCT_NOT_FOUND": "Product not found",
+  "PRODUCT_SKU_EXISTS": "Product SKU already exists",
+  "PRODUCT_PERMALINK_EXISTS": "Product permalink already exists",
+  "CREATE_FAILED": "Failed to create product",
+  "UPDATE_FAILED": "Failed to update product",
+  "DELETE_FAILED": "Failed to delete product"
+}
+

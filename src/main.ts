@@ -24,11 +24,6 @@ async function bootstrap() {
         'http://localhost:3001',
         'https://shop.medicova.net',
         'http://shop.medicova.net', // Also allow http version
-        'https://www.medicova.cloud',
-        'https://medicova.cloud',
-        'https://medicova.cloud/',
-        'http://62.72.18.209'
-
       ];
       
       if (allowedOrigins.includes(origin)) {
@@ -102,12 +97,15 @@ async function bootstrap() {
     .addTag('Subcategories', 'Subcategory management endpoints')
     .addTag('Subcategory Child', 'Subcategory child management endpoints')
     .addTag('Brands', 'Brand management endpoints')
+    .addTag('Attributes', 'Product attribute management endpoints')
     .addTag('Products', 'Product management endpoints')
     .addTag('Orders', 'Order management endpoints')
     .addTag('Cart', 'Shopping cart endpoints')
     .addTag('Coupons', 'Coupon/Discount management endpoints')
     .addTag('Tags', 'Tag management endpoints')
     .addTag('Reviews', 'Review management endpoints')
+    .addTag('Seller Store', 'Seller store management endpoints')
+    .addTag('Seller Documents', 'Seller document management endpoints')
     .addServer('http://localhost:3000', 'Development server')
     .addServer('http://82.112.255.49', 'Production server')
     .build();

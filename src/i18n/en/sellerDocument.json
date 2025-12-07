@@ -1,0 +1,13 @@
+{
+  "UPLOAD_SUCCESS": "Documents uploaded successfully",
+  "UPDATE_SUCCESS": "Documents updated successfully",
+  "FETCH_SUCCESS": "Documents fetched successfully",
+  "DELETE_SUCCESS": "Documents deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Document status updated successfully",
+  "DOCUMENT_NOT_FOUND": "Seller document not found",
+  "SELLER_DOCUMENT_EXISTS": "Documents already exist for this seller",
+  "UPLOAD_FAILED": "Failed to upload documents",
+  "UPDATE_FAILED": "Failed to update documents",
+  "DELETE_FAILED": "Failed to delete documents"
+}
+

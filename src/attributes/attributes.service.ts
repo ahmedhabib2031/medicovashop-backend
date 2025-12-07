@@ -1,26 +1,93 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAttributeDto } from './dto/create-attribute.dto';
-import { UpdateAttributeDto } from './dto/update-attribute.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import {
+  ProductAttribute,
+  ProductAttributeDocument,
+} from './entities/attribute.entity';
+import { CreateProductAttributeDto } from './dto/create-attribute.dto';
+import { UpdateProductAttributeDto } from './dto/update-attribute.dto';
 
 @Injectable()
 export class AttributesService {
-  create(createAttributeDto: CreateAttributeDto) {
-    return 'This action adds a new attribute';
+  constructor(
+    @InjectModel(ProductAttribute.name)
+    private attributeModel: Model<ProductAttributeDocument>,
+  ) {}
+
+  async create(dto: CreateProductAttributeDto): Promise<ProductAttribute> {
+    const created = new this.attributeModel(dto);
+    await created.save();
+    return created.toObject();
   }
 
-  findAll() {
-    return `This action returns all attributes`;
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryId?: string;
+    subcategoryId?: string;
+    active?: boolean;
+  }): Promise<{ data: any[]; total: number }> {
+    const page = query.page > 0 ? query.page : 1;
+    const limit = query.limit > 0 ? query.limit : 10;
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    if (query.search) {
+      const regex = new RegExp(query.search, 'i');
+      filter.$or = [{ title: regex }, { titleAr: regex }];
+    }
+
+    if (query.categoryId) {
+      filter.categoriesIds = new Types.ObjectId(query.categoryId);
+    }
+
+    if (query.subcategoryId) {
+      filter.subcategoriesIds = new Types.ObjectId(query.subcategoryId);
+    }
+
+    if (query.active !== undefined) {
+      filter.active = query.active;
+    }
+
+    const total = await this.attributeModel.countDocuments(filter);
+
+    const attributes = await this.attributeModel
+      .find(filter)
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    return { data: attributes, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} attribute`;
+  async findOne(id: string): Promise<ProductAttribute> {
+    const item = await this.attributeModel.findById(id).lean();
+    if (!item) throw new NotFoundException('Product attribute not found');
+    return item as any;
   }
 
-  update(id: number, updateAttributeDto: UpdateAttributeDto) {
-    return `This action updates a #${id} attribute`;
+  async update(id: string, dto: UpdateProductAttributeDto): Promise<ProductAttribute> {
+    const updated = await this.attributeModel.findByIdAndUpdate(id, dto, { new: true });
+    if (!updated) throw new NotFoundException('Product attribute not found');
+    return updated.toObject();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} attribute`;
+  async updateStatus(id: string, dto: { active: boolean }): Promise<ProductAttribute> {
+    const updated = await this.attributeModel.findByIdAndUpdate(
+      id,
+      { active: dto.active },
+      { new: true },
+    );
+    if (!updated) throw new NotFoundException('Product attribute not found');
+    return updated.toObject();
+  }
+
+  async remove(id: string): Promise<void> {
+    const deleted = await this.attributeModel.findByIdAndDelete(id);
+    if (!deleted) throw new NotFoundException('Product attribute not found');
   }
 }

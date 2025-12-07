@@ -22,7 +22,29 @@ export class AuthService {
     if (exists) throw new BadRequestException('EMAIL_EXISTS');
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    const user = await this.usersService.create({ ...dto, password: hashed });
+    
+    // Prepare user data based on role
+    const userData: any = {
+      email: dto.email,
+      password: hashed,
+      language: dto.language,
+      role: dto.role,
+      phone: dto.phone || null,
+    };
+
+    // Set name fields based on role
+    if (dto.role === UserRole.SELLER) {
+      userData.fullName = dto.fullName;
+      userData.firstName = null;
+      userData.lastName = null;
+    } else {
+      // USER or ADMIN
+      userData.firstName = dto.firstName;
+      userData.lastName = dto.lastName;
+      userData.fullName = null;
+    }
+
+    const user = await this.usersService.create(userData);
 
     return this.generateTokens(user);
   }
@@ -52,17 +74,25 @@ export class AuthService {
 
     await this.usersService.updateRefreshToken(user._id.toString(), hashedRefreshToken);
 
+    // Return appropriate name fields based on role
+    const userResponse: any = {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      language: user.language,
+    };
+
+    if (user.role === UserRole.SELLER) {
+      userResponse.fullName = user.fullName;
+    } else {
+      userResponse.firstName = user.firstName;
+      userResponse.lastName = user.lastName;
+    }
+
     return {
       accessToken,
       refreshToken,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        language: user.language,
-      },
+      user: userResponse,
     };
   }
 
@@ -90,17 +120,25 @@ export class AuthService {
     const payload = { id: safeUser._id.toString(), role: safeUser.role, language: safeUser.language };
     const accessToken = this.jwt.sign(payload, { expiresIn: '1h' });
 
+    // Return appropriate name fields based on role
+    const userResponse: any = {
+      id: safeUser._id.toString(),
+      email: safeUser.email,
+      role: safeUser.role,
+      language: safeUser.language,
+    };
+
+    if (safeUser.role === UserRole.SELLER) {
+      userResponse.fullName = safeUser.fullName;
+    } else {
+      userResponse.firstName = safeUser.firstName;
+      userResponse.lastName = safeUser.lastName;
+    }
+
     return {
       accessToken,
       refreshToken, // same token sent by client
-      user: {
-        id: safeUser._id.toString(),
-        email: safeUser.email,
-        role: safeUser.role,
-        firstName: safeUser.firstName,
-        lastName: safeUser.lastName,
-        language: safeUser.language,
-      },
+      user: userResponse,
     };
   }
 

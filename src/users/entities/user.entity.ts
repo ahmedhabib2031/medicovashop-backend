@@ -11,29 +11,23 @@ export enum UserRole {
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true })
-  firstName: string;
+  @Prop({ type: String, default: null })
+  firstName: string | null;
 
-  @Prop({ required: true })
-  lastName: string;
+  @Prop({ type: String, default: null })
+  lastName: string | null;
+
+  @Prop({ type: String, default: null })
+  fullName: string | null;
 
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop()
-  phone: string;
+  @Prop({ type: String, default: null })
+  phone: string | null;
 
-  @Prop()
-  country: string;
-
-  @Prop()
-  state: string;
-
-  @Prop()
-  city: string;
-
-  @Prop()
-  profileImage: string;
+  @Prop({ type: String, default: null })
+  SellerContactEmail: string | null;
 
   @Prop({ type: String, enum: ['ar', 'en'], default: 'en' })
   language: string;
@@ -41,10 +35,14 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
+  @Prop({
+    type: String,
+    enum: UserRole,
+    default: UserRole.USER,
+  })
   role: UserRole;
 
-  @Prop({ default: true })
+  @Prop({ type: Boolean, default: true })
   active: boolean;
 
   @Prop({ type: String, default: null })

@@ -1,0 +1,13 @@
+{
+  "UPLOAD_SUCCESS": "تم رفع المستندات بنجاح",
+  "UPDATE_SUCCESS": "تم تحديث المستندات بنجاح",
+  "FETCH_SUCCESS": "تم جلب المستندات بنجاح",
+  "DELETE_SUCCESS": "تم حذف المستندات بنجاح",
+  "STATUS_UPDATE_SUCCESS": "تم تحديث حالة المستندات بنجاح",
+  "DOCUMENT_NOT_FOUND": "مستندات البائع غير موجودة",
+  "SELLER_DOCUMENT_EXISTS": "توجد مستندات بالفعل لهذا البائع",
+  "UPLOAD_FAILED": "فشل رفع المستندات",
+  "UPDATE_FAILED": "فشل تحديث المستندات",
+  "DELETE_FAILED": "فشل حذف المستندات"
+}
+

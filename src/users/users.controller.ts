@@ -8,13 +8,18 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateSellerProfileDto } from './dto/update-seller-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
+@ApiTags('Users')
+@ApiBearerAuth('JWT-auth')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
@@ -88,20 +93,6 @@ export class UsersController {
     };
   }
 
-  @Put('reset-password/:id')
-  @Roles(UserRole.ADMIN)
-  async resetPassword(
-    @Param('id') id: string,
-    @Body('password') password: string,
-    @Req() req,
-  ) {
-    await this.usersService.resetPassword(id, password);
-    const lang = this.getLang(req);
-    return {
-      message: await this.i18n.t('users.PASSWORD_UPDATED', { lang }),
-    };
-  }
-
   @Put('me')
   async updateMe(@Req() req, @Body() body) {
     const updated = await this.usersService.update(req.user.id, body);
@@ -109,6 +100,27 @@ export class UsersController {
     return {
       data: updated,
       message: await this.i18n.t('users.PROFILE_UPDATED', { lang }),
+    };
+  }
+
+  @Put('password')
+  @ApiOperation({
+    summary: 'Update password',
+    description:
+      'Update user password. Requires current password, new password, and confirmation.',
+  })
+  @ApiResponse({ status: 200, description: 'Password successfully updated' })
+  @ApiResponse({ status: 400, description: 'Invalid password format or passwords do not match' })
+  @ApiResponse({ status: 401, description: 'Current password is incorrect' })
+  async updatePassword(@Req() req, @Body() dto: UpdatePasswordDto) {
+    await this.usersService.updatePassword(
+      req.user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
+    const lang = this.getLang(req);
+    return {
+      message: await this.i18n.t('users.PASSWORD_UPDATED', { lang }),
     };
   }
 
@@ -166,18 +178,21 @@ export class UsersController {
     };
   }
 
-@Put('seller/me')
-@Roles(UserRole.SELLER)
-async updateSellerProfile(@Req() req, @Body() body) {
-  const sellerId = req.user.id;
+  @Put('seller/me')
+  @Roles(UserRole.SELLER)
+  @ApiOperation({ summary: 'Update seller profile', description: 'Update seller full name and contact email (Seller only)' })
+  @ApiResponse({ status: 200, description: 'Seller profile successfully updated' })
+  @ApiResponse({ status: 404, description: 'Seller not found' })
+  async updateSellerProfile(@Req() req, @Body() dto: UpdateSellerProfileDto) {
+    const sellerId = req.user.id;
 
-  const updated = await this.usersService.updateSellerProfile(sellerId, body);
+    const updated = await this.usersService.updateSellerProfile(sellerId, dto);
 
-  const lang = this.getLang(req);
-  return {
-    data: updated,
-    message: await this.i18n.t('users.SELLER_PROFILE_UPDATED', { lang }),
-  };
-}
+    const lang = this.getLang(req);
+    return {
+      data: updated,
+      message: await this.i18n.t('users.SELLER_PROFILE_UPDATED', { lang }),
+    };
+  }
 
 }

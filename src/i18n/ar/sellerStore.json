@@ -1,0 +1,13 @@
+{
+  "CREATE_SUCCESS": "تم إنشاء متجر البائع بنجاح",
+  "FETCH_SUCCESS": "تم جلب متجر البائع بنجاح",
+  "UPDATE_SUCCESS": "تم تحديث متجر البائع بنجاح",
+  "DELETE_SUCCESS": "تم حذف متجر البائع بنجاح",
+  "STATUS_UPDATE_SUCCESS": "تم تحديث حالة متجر البائع بنجاح",
+  "STORE_NOT_FOUND": "متجر البائع غير موجود",
+  "SELLER_STORE_EXISTS": "يوجد متجر بالفعل لهذا البائع",
+  "CREATE_FAILED": "فشل إنشاء متجر البائع",
+  "UPDATE_FAILED": "فشل تحديث متجر البائع",
+  "DELETE_FAILED": "فشل حذف متجر البائع"
+}
+

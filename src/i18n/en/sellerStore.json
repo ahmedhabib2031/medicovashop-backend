@@ -1,0 +1,13 @@
+{
+  "CREATE_SUCCESS": "Seller store created successfully",
+  "FETCH_SUCCESS": "Seller store fetched successfully",
+  "UPDATE_SUCCESS": "Seller store updated successfully",
+  "DELETE_SUCCESS": "Seller store deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Seller store status updated successfully",
+  "STORE_NOT_FOUND": "Seller store not found",
+  "SELLER_STORE_EXISTS": "Store already exists for this seller",
+  "CREATE_FAILED": "Failed to create seller store",
+  "UPDATE_FAILED": "Failed to update seller store",
+  "DELETE_FAILED": "Failed to delete seller store"
+}
+

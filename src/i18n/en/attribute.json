@@ -1,0 +1,11 @@
+{
+  "CREATE_SUCCESS": "Product attribute created successfully",
+  "FETCH_SUCCESS": "Product attribute fetched successfully",
+  "UPDATE_SUCCESS": "Product attribute updated successfully",
+  "DELETE_SUCCESS": "Product attribute deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Product attribute status updated successfully",
+  "CREATE_FAILED": "Failed to create product attribute",
+  "ATTRIBUTE_NOT_FOUND": "Product attribute not found"
+}
+
+
