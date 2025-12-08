@@ -14,33 +14,31 @@ import { UserRole } from '../../users/entities/user.entity';
 export class RegisterDto {
   @ApiProperty({
     example: 'John',
-    description: 'First name (required for USER and ADMIN roles)',
+    description: 'First name (required for all roles)',
     required: false,
   })
-  @ValidateIf((o) => o.role === UserRole.USER || o.role === UserRole.ADMIN)
   @IsString()
-  @IsNotEmpty({ message: 'First name is required for users and admins' })
-  firstName?: string;
+  @IsNotEmpty({ message: 'First name is required' })
+  firstName: string;
 
   @ApiProperty({
     example: 'Doe',
-    description: 'Last name (required for USER and ADMIN roles)',
+    description: 'Last name (required for all roles)',
     required: false,
   })
-  @ValidateIf((o) => o.role === UserRole.USER || o.role === UserRole.ADMIN)
   @IsString()
-  @IsNotEmpty({ message: 'Last name is required for users and admins' })
-  lastName?: string;
+  @IsNotEmpty({ message: 'Last name is required' })
+  lastName: string;
 
   @ApiProperty({
-    example: 'John Doe',
-    description: 'Full name (required for SELLER role)',
+    example: 'My Brand Store',
+    description: 'Brand name (required for SELLER role only)',
     required: false,
   })
   @ValidateIf((o) => o.role === UserRole.SELLER)
   @IsString()
-  @IsNotEmpty({ message: 'Full name is required for sellers' })
-  fullName?: string;
+  @IsNotEmpty({ message: 'Brand name is required for sellers' })
+  brandName?: string;
 
   @ApiProperty({
     example: 'john.doe@example.com',

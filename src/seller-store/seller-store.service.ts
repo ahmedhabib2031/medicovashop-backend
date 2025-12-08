@@ -62,7 +62,7 @@ export class SellerStoreService {
 
     const stores = await this.sellerStoreModel
       .find(filter)
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -74,7 +74,7 @@ export class SellerStoreService {
   async findOne(id: string): Promise<SellerStore> {
     const store = await this.sellerStoreModel
       .findById(id)
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
     if (!store) throw new NotFoundException('SELLER_STORE_NOT_FOUND');
     return store as SellerStore;
@@ -83,7 +83,7 @@ export class SellerStoreService {
   async findBySellerId(sellerId: string): Promise<SellerStore | null> {
     const store = await this.sellerStoreModel
       .findOne({ sellerId })
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
     return store as SellerStore | null;
   }
@@ -91,7 +91,7 @@ export class SellerStoreService {
   async update(id: string, dto: UpdateSellerStoreDto): Promise<SellerStore> {
     const store = await this.sellerStoreModel
       .findByIdAndUpdate(id, dto, { new: true })
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
     if (!store) throw new NotFoundException('SELLER_STORE_NOT_FOUND');
     return store as SellerStore;
@@ -103,7 +103,7 @@ export class SellerStoreService {
   ): Promise<SellerStore> {
     const store = await this.sellerStoreModel
       .findByIdAndUpdate(id, { active: dto.active }, { new: true })
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
     if (!store) throw new NotFoundException('SELLER_STORE_NOT_FOUND');
     return store as SellerStore;

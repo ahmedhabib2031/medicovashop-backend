@@ -2,10 +2,14 @@ import { IsString, IsEmail, IsOptional, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateSellerProfileDto {
-  @ApiProperty({ example: 'John Doe', description: 'Seller full name', required: false })
+  @ApiProperty({
+    example: 'My Brand Store',
+    description: 'Seller brand name',
+    required: false,
+  })
   @IsOptional()
   @IsString()
-  fullName?: string;
+  brandName?: string;
 
   @ApiProperty({
     example: 'seller@example.com',
@@ -28,4 +32,3 @@ export class UpdateSellerProfileDto {
   })
   phone?: string;
 }
-

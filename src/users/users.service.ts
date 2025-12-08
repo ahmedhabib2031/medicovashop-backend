@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole } from './entities/user.entity';
@@ -58,7 +62,7 @@ export class UsersService {
       $or: [
         { firstName: { $regex: query, $options: 'i' } },
         { lastName: { $regex: query, $options: 'i' } },
-        { fullName: { $regex: query, $options: 'i' } },
+        { brandName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
         { SellerContactEmail: { $regex: query, $options: 'i' } },
       ],
@@ -147,7 +151,7 @@ export class UsersService {
     if (!result) throw new NotFoundException('User not found');
     return { message: 'User deleted successfully' };
   }
-  
+
   async updateRefreshToken(userId: string, hashedToken: string) {
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks
     return this.userModel.findByIdAndUpdate(userId, {
@@ -157,7 +161,10 @@ export class UsersService {
   }
 
   // Update seller profile
-  async updateSellerProfile(sellerId: string, data: Partial<User>): Promise<User> {
+  async updateSellerProfile(
+    sellerId: string,
+    data: Partial<User>,
+  ): Promise<User> {
     const user = await this.userModel.findByIdAndUpdate(sellerId, data, {
       new: true,
     });

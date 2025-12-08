@@ -137,7 +137,7 @@ export class ProductsService {
       .populate('subcategory', 'name nameAr')
       .populate('brand', 'name nameAr logo')
       .populate('store', 'name address')
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'productName productNameAr price')
       .skip(skip)
       .limit(limit)
@@ -154,7 +154,7 @@ export class ProductsService {
       .populate('subcategory', 'name nameAr')
       .populate('brand', 'name nameAr logo')
       .populate('store', 'name address storePhone storeEmail')
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'productName productNameAr price productImages')
       .lean();
 
@@ -204,7 +204,7 @@ export class ProductsService {
       .populate('subcategory', 'name nameAr')
       .populate('brand', 'name nameAr logo')
       .populate('store', 'name address')
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'productName productNameAr price productImages')
       .lean();
 
@@ -225,7 +225,7 @@ export class ProductsService {
       .populate('subcategory', 'name nameAr')
       .populate('brand', 'name nameAr logo')
       .populate('store', 'name address')
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'productName productNameAr price productImages')
       .lean();
 

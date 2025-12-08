@@ -46,7 +46,7 @@ export class SellerDocumentsService {
       { ...dto, status: DocumentStatus.PENDING },
       { new: true, upsert: false },
     )
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
     if (!document) {
@@ -80,7 +80,7 @@ export class SellerDocumentsService {
 
     const documents = await this.sellerDocumentModel
       .find(filter)
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -92,7 +92,7 @@ export class SellerDocumentsService {
   async findOne(id: string): Promise<SellerDocument> {
     const document = await this.sellerDocumentModel
       .findById(id)
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
     if (!document) {
@@ -105,7 +105,7 @@ export class SellerDocumentsService {
   async findBySellerId(sellerId: string): Promise<SellerDocument | null> {
     const document = await this.sellerDocumentModel
       .findOne({ sellerId })
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
     return document as SellerDocument | null;
@@ -136,7 +136,7 @@ export class SellerDocumentsService {
 
     const document = await this.sellerDocumentModel
       .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('sellerId', 'fullName email')
+      .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
     if (!document) {
@@ -154,4 +154,6 @@ export class SellerDocumentsService {
     return { deleted: true };
   }
 }
+
+
 

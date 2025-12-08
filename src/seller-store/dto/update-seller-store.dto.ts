@@ -46,3 +46,5 @@ export class UpdateSellerStoreDto extends PartialType(CreateSellerStoreDto) {
   storeEmail?: string;
 }
 
+
+

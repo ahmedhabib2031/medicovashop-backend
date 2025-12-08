@@ -32,16 +32,15 @@ export class AuthService {
       phone: dto.phone || null,
     };
 
-    // Set name fields based on role
+    // Set name fields - all roles have firstName and lastName
+    userData.firstName = dto.firstName;
+    userData.lastName = dto.lastName;
+    
+    // Sellers also have brandName
     if (dto.role === UserRole.SELLER) {
-      userData.fullName = dto.fullName;
-      userData.firstName = null;
-      userData.lastName = null;
+      userData.brandName = dto.brandName;
     } else {
-      // USER or ADMIN
-      userData.firstName = dto.firstName;
-      userData.lastName = dto.lastName;
-      userData.fullName = null;
+      userData.brandName = null;
     }
 
     const user = await this.usersService.create(userData);
@@ -82,11 +81,13 @@ export class AuthService {
       language: user.language,
     };
 
+    // All users have firstName and lastName
+    userResponse.firstName = user.firstName;
+    userResponse.lastName = user.lastName;
+    
+    // Sellers also have brandName
     if (user.role === UserRole.SELLER) {
-      userResponse.fullName = user.fullName;
-    } else {
-      userResponse.firstName = user.firstName;
-      userResponse.lastName = user.lastName;
+      userResponse.brandName = user.brandName;
     }
 
     return {
@@ -128,11 +129,13 @@ export class AuthService {
       language: safeUser.language,
     };
 
+    // All users have firstName and lastName
+    userResponse.firstName = safeUser.firstName;
+    userResponse.lastName = safeUser.lastName;
+    
+    // Sellers also have brandName
     if (safeUser.role === UserRole.SELLER) {
-      userResponse.fullName = safeUser.fullName;
-    } else {
-      userResponse.firstName = safeUser.firstName;
-      userResponse.lastName = safeUser.lastName;
+      userResponse.brandName = safeUser.brandName;
     }
 
     return {

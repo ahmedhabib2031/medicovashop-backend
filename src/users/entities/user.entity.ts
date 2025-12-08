@@ -18,7 +18,7 @@ export class User {
   lastName: string | null;
 
   @Prop({ type: String, default: null })
-  fullName: string | null;
+  brandName: string | null;
 
   @Prop({ required: true, unique: true })
   email: string;
