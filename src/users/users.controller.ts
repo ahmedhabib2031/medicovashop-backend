@@ -8,7 +8,12 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../auth/roles.guard';
@@ -110,7 +115,10 @@ export class UsersController {
       'Update user password. Requires current password, new password, and confirmation.',
   })
   @ApiResponse({ status: 200, description: 'Password successfully updated' })
-  @ApiResponse({ status: 400, description: 'Invalid password format or passwords do not match' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid password format or passwords do not match',
+  })
   @ApiResponse({ status: 401, description: 'Current password is incorrect' })
   async updatePassword(@Req() req, @Body() dto: UpdatePasswordDto) {
     await this.usersService.updatePassword(
@@ -180,13 +188,22 @@ export class UsersController {
 
   @Put('seller/me')
   @Roles(UserRole.SELLER)
-  @ApiOperation({ summary: 'Update seller profile', description: 'Update seller full name and contact email (Seller only)' })
-  @ApiResponse({ status: 200, description: 'Seller profile successfully updated' })
+  @ApiOperation({
+    summary: 'Update seller brand name',
+    description: 'Update seller brand name only (Seller only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Seller brand name successfully updated',
+  })
   @ApiResponse({ status: 404, description: 'Seller not found' })
   async updateSellerProfile(@Req() req, @Body() dto: UpdateSellerProfileDto) {
     const sellerId = req.user.id;
 
-    const updated = await this.usersService.updateSellerProfile(sellerId, dto);
+    // Only update brandName
+    const updated = await this.usersService.updateSellerProfile(sellerId, {
+      brandName: dto.brandName,
+    });
 
     const lang = this.getLang(req);
     return {
@@ -194,5 +211,4 @@ export class UsersController {
       message: await this.i18n.t('users.SELLER_PROFILE_UPDATED', { lang }),
     };
   }
-
 }
