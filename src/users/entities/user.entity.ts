@@ -29,6 +29,18 @@ export class User {
   @Prop({ type: String, default: null })
   SellerContactEmail: string | null;
 
+  @Prop({ type: String, default: null })
+  country: string | null;
+
+  @Prop({ type: String, default: null })
+  state: string | null;
+
+  @Prop({ type: String, default: null })
+  city: string | null;
+
+  @Prop({ type: String, default: null })
+  profileImage: string | null;
+
   @Prop({ type: String, enum: ['ar', 'en'], default: 'en' })
   language: string;
 

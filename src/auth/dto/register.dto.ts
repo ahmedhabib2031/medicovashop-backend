@@ -6,7 +6,6 @@ import {
   IsString,
   Matches,
   IsOptional,
-  ValidateIf,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../users/entities/user.entity';
@@ -29,16 +28,6 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty({ message: 'Last name is required' })
   lastName: string;
-
-  @ApiProperty({
-    example: 'My Brand Store',
-    description: 'Brand name (required for SELLER role only)',
-    required: false,
-  })
-  @ValidateIf((o) => o.role === UserRole.SELLER)
-  @IsString()
-  @IsNotEmpty({ message: 'Brand name is required for sellers' })
-  brandName?: string;
 
   @ApiProperty({
     example: 'john.doe@example.com',

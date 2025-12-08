@@ -189,21 +189,34 @@ export class UsersController {
   @Put('seller/me')
   @Roles(UserRole.SELLER)
   @ApiOperation({
-    summary: 'Update seller brand name',
-    description: 'Update seller brand name only (Seller only)',
+    summary: 'Update seller profile',
+    description:
+      'Update seller profile information including brand name, contact email, phone, location, and profile image (Seller only)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Seller brand name successfully updated',
+    description: 'Seller profile successfully updated',
   })
   @ApiResponse({ status: 404, description: 'Seller not found' })
   async updateSellerProfile(@Req() req, @Body() dto: UpdateSellerProfileDto) {
     const sellerId = req.user.id;
 
-    // Only update brandName
-    const updated = await this.usersService.updateSellerProfile(sellerId, {
-      brandName: dto.brandName,
-    });
+    // Map sellerContactEmail to SellerContactEmail (entity field name)
+    const updateData: any = {};
+    if (dto.brandName !== undefined) updateData.brandName = dto.brandName;
+    if (dto.sellerContactEmail !== undefined)
+      updateData.SellerContactEmail = dto.sellerContactEmail;
+    if (dto.phone !== undefined) updateData.phone = dto.phone;
+    if (dto.country !== undefined) updateData.country = dto.country;
+    if (dto.state !== undefined) updateData.state = dto.state;
+    if (dto.city !== undefined) updateData.city = dto.city;
+    if (dto.profileImage !== undefined)
+      updateData.profileImage = dto.profileImage;
+
+    const updated = await this.usersService.updateSellerProfile(
+      sellerId,
+      updateData,
+    );
 
     const lang = this.getLang(req);
     return {

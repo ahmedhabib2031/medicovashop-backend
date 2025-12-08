@@ -36,12 +36,8 @@ export class AuthService {
     userData.firstName = dto.firstName;
     userData.lastName = dto.lastName;
     
-    // Sellers also have brandName
-    if (dto.role === UserRole.SELLER) {
-      userData.brandName = dto.brandName;
-    } else {
-      userData.brandName = null;
-    }
+    // brandName is not set during registration - sellers will update it later
+    userData.brandName = null;
 
     const user = await this.usersService.create(userData);
 
