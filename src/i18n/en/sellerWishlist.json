@@ -1,0 +1,14 @@
+{
+  "CREATE_SUCCESS": "Seller wishlist created successfully",
+  "FETCH_SUCCESS": "Seller wishlist fetched successfully",
+  "ADD_PRODUCTS_SUCCESS": "Products added to wishlist successfully",
+  "REMOVE_PRODUCTS_SUCCESS": "Products removed from wishlist successfully",
+  "CLEAR_SUCCESS": "Wishlist cleared successfully",
+  "DELETE_SUCCESS": "Wishlist deleted successfully",
+  "WISHLIST_NOT_FOUND": "Wishlist not found",
+  "ADD_PRODUCTS_FAILED": "Failed to add products to wishlist",
+  "REMOVE_PRODUCTS_FAILED": "Failed to remove products from wishlist"
+}
+
+
+

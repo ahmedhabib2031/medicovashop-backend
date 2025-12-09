@@ -1,43 +1,69 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { CouponType } from '../dto/create-coupon.dto';
+import { Document, Types } from 'mongoose';
+import {
+  CouponType,
+  DiscountMethod,
+  AppliesTo,
+  Eligibility,
+} from '../dto/create-coupon.dto';
 
 export type DiscountDocument = Discount & Document;
 
 @Schema({ timestamps: true })
 export class Discount {
-  @Prop({ required: true, unique: true })
-  couponCode: string;
+  @Prop({ required: true })
+  discountName: string;
 
-  @Prop({ default: false })
-  promotion: boolean;
+  @Prop({ enum: DiscountMethod, required: true, default: 'automatic_discount' })
+  method: DiscountMethod;
 
-  @Prop({ default: false })
-  flashSale: boolean;
-
-  @Prop({ default: false })
-  unlimitedUses: boolean;
-
-  @Prop({ default: false })
-  applyViaUrl: boolean;
-
-  @Prop({ default: true })
-  displayAtCheckout: boolean;
-
-  @Prop()
-  startDate: Date;
-
-  @Prop()
-  endDate: Date;
+  @Prop({ unique: true, sparse: true })
+  discountCode: string; // Only required when method is 'discount_code'
 
   @Prop({ enum: CouponType, required: true })
-  couponType: CouponType;
+  discountType: CouponType; // percentage or fixed
 
   @Prop({ required: true })
   discountValue: number;
 
+  @Prop({ enum: AppliesTo, required: true, default: 'all_products' })
+  appliesTo: AppliesTo;
+
+  @Prop({ type: [Types.ObjectId], ref: 'Product', default: [] })
+  productIds: Types.ObjectId[]; // When appliesTo is 'specific_products'
+
   @Prop({ type: [String], default: [] })
-  applyFor: string[];
+  categoryIds: string[]; // When appliesTo is 'specific_categories'
+
+  @Prop({ type: [String], default: [] })
+  subcategoryIds: string[]; // When appliesTo is 'specific_subcategories'
+
+  @Prop({ default: true })
+  availableOnAllSalesChannels: boolean;
+
+  @Prop({ enum: Eligibility, required: true, default: 'all_customers' })
+  eligibility: Eligibility;
+
+  @Prop({ type: [String], default: [] })
+  customerSegmentIds: string[]; // When eligibility is 'specific_customer_segments'
+
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
+  customerIds: Types.ObjectId[]; // When eligibility is 'specific_customers'
+
+  @Prop({ type: Date })
+  startDate: Date;
+
+  @Prop({ type: String })
+  startTime: string; // Time in HH:mm format (EET timezone)
+
+  @Prop({ type: Date, default: null })
+  endDate: Date | null;
+
+  @Prop({ type: String, default: null })
+  endTime: string | null; // Time in HH:mm format (EET timezone)
+
+  @Prop({ default: true })
+  active: boolean;
 }
 
 export const DiscountSchema = SchemaFactory.createForClass(Discount);

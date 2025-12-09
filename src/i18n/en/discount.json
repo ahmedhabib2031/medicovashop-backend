@@ -1,7 +1,8 @@
 {
     "DISCOUNT_CREATED": "Discount created successfully",
-    "DISCOUNTS_FETCHED": "Discounts fetched successfully!!!!!!",
+    "DISCOUNTS_FETCHED": "Discounts fetched successfully",
     "DISCOUNT_FETCHED": "Discount fetched successfully",
     "DISCOUNT_UPDATED": "Discount updated successfully",
-    "DISCOUNT_DELETED": "Discount deleted successfully"
+    "DISCOUNT_DELETED": "Discount deleted successfully",
+    "CODE_GENERATED": "Discount code generated successfully"
 }

@@ -1,0 +1,15 @@
+{
+  "CREATE_SUCCESS": "Seller brand created successfully",
+  "FETCH_SUCCESS": "Seller brand fetched successfully",
+  "UPDATE_SUCCESS": "Seller brand updated successfully",
+  "DELETE_SUCCESS": "Seller brand deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Seller brand status updated successfully",
+  "SELLER_BRAND_NOT_FOUND": "Seller brand not found",
+  "BRAND_NAME_EXISTS": "Brand name already exists for this seller",
+  "CREATE_FAILED": "Failed to create seller brand",
+  "UPDATE_FAILED": "Failed to update seller brand",
+  "DELETE_FAILED": "Failed to delete seller brand"
+}
+
+
+

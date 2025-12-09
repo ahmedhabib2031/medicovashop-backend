@@ -1,0 +1,14 @@
+{
+  "CREATE_SUCCESS": "Customer address created successfully",
+  "FETCH_SUCCESS": "Customer address fetched successfully",
+  "UPDATE_SUCCESS": "Customer address updated successfully",
+  "DELETE_SUCCESS": "Customer address deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Customer address status updated successfully",
+  "CUSTOMER_ADDRESS_NOT_FOUND": "Customer address not found",
+  "CREATE_FAILED": "Failed to create customer address",
+  "UPDATE_FAILED": "Failed to update customer address",
+  "DELETE_FAILED": "Failed to delete customer address"
+}
+
+
+

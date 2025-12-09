@@ -1,0 +1,14 @@
+{
+  "CREATE_SUCCESS": "تم إنشاء عنوان العميل بنجاح",
+  "FETCH_SUCCESS": "تم جلب عنوان العميل بنجاح",
+  "UPDATE_SUCCESS": "تم تحديث عنوان العميل بنجاح",
+  "DELETE_SUCCESS": "تم حذف عنوان العميل بنجاح",
+  "STATUS_UPDATE_SUCCESS": "تم تحديث حالة عنوان العميل بنجاح",
+  "CUSTOMER_ADDRESS_NOT_FOUND": "عنوان العميل غير موجود",
+  "CREATE_FAILED": "فشل إنشاء عنوان العميل",
+  "UPDATE_FAILED": "فشل تحديث عنوان العميل",
+  "DELETE_FAILED": "فشل حذف عنوان العميل"
+}
+
+
+

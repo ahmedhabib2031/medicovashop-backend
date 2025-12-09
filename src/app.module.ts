@@ -25,6 +25,9 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { SubcategoryChildModule } from './subcategory-child/subcategory-child.module';
 import { SellerStoreModule } from './seller-store/seller-store.module';
 import { SellerDocumentsModule } from './seller-documents/seller-documents.module';
+import { CustomerAddressesModule } from './customer-addresses/customer-addresses.module';
+import { SellerBrandsModule } from './seller-brands/seller-brands.module';
+import { SellerWishlistsModule } from './seller-wishlists/seller-wishlists.module';
 import { ConfigModule } from '@nestjs/config';
 import { UploadModule } from './upload/upload.module';
 
@@ -78,6 +81,9 @@ import * as path from 'path';
     TestimonialsModule,
     SellerStoreModule,
     SellerDocumentsModule,
+    CustomerAddressesModule,
+    SellerBrandsModule,
+    SellerWishlistsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

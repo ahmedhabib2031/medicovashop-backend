@@ -106,8 +106,12 @@ async function bootstrap() {
     .addTag('Reviews', 'Review management endpoints')
     .addTag('Seller Store', 'Seller store management endpoints')
     .addTag('Seller Documents', 'Seller document management endpoints')
+    .addTag('Customer Addresses', 'Customer address management endpoints')
+    .addTag('Seller Brands', 'Seller brand management endpoints')
+    .addTag('Seller Wishlists', 'Seller wishlist management endpoints')
     .addServer('http://localhost:3000', 'Development server')
-    .addServer('http://82.112.255.49', 'Production server')
+    .addServer('https://www.medicova.cloud', 'Production server')
+    .addServer('http://82.112.255.49', 'Production server (IP)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
