@@ -1,0 +1,17 @@
+{
+  "INVENTORY_CREATED": "Inventory created successfully",
+  "INVENTORY_RETRIEVED": "Inventory retrieved successfully",
+  "INVENTORY_UPDATED": "Inventory updated successfully",
+  "INVENTORY_STATUS_UPDATED": "Inventory status updated successfully",
+  "INVENTORY_DELETED": "Inventory deleted successfully",
+  "INVENTORY_NOT_FOUND": "Inventory not found",
+  "INVENTORY_ALREADY_EXISTS": "Inventory already exists for this product",
+  "INVENTORY_EXCEEDS_PRODUCT_STOCK": "Total inventory quantity exceeds product stock quantity",
+  "DUPLICATE_VARIANT_COMBINATIONS": "Duplicate variant combinations found",
+  "INVENTORY_NOT_OWNED_BY_SELLER": "You don't have permission to access this inventory",
+  "PRODUCT_NOT_FOUND": "Product not found",
+  "PRODUCT_NOT_OWNED_BY_SELLER": "You don't have permission to access this product",
+  "INVALID_SIZE": "Size {size} is not available for this product",
+  "INVALID_COLOR": "Color {color} is not available for this product"
+}
+

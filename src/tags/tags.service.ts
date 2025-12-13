@@ -1,5 +1,9 @@
 // src/tags/tags.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tag, TagDocument } from './entities/tag.entity';
@@ -11,6 +15,14 @@ export class TagsService {
   constructor(@InjectModel(Tag.name) private tagModel: Model<TagDocument>) {}
 
   async create(dto: CreateTagDto): Promise<Tag> {
+    // Check if permalink already exists
+    const existingTag = await this.tagModel.findOne({
+      permalink: dto.permalink,
+    });
+    if (existingTag) {
+      throw new BadRequestException('TAG_PERMALINK_ALREADY_EXISTS');
+    }
+
     const tag = new this.tagModel(dto);
     await tag.save();
     return tag.toObject();
@@ -28,8 +40,23 @@ export class TagsService {
   }
 
   async update(id: string, dto: UpdateTagDto): Promise<Tag> {
+    // Check if tag exists
+    const existingTag = await this.tagModel.findById(id);
+    if (!existingTag) {
+      throw new NotFoundException('Tag not found');
+    }
+
+    // Check if permalink is being updated and if it already exists
+    if (dto.permalink && dto.permalink !== existingTag.permalink) {
+      const duplicateTag = await this.tagModel.findOne({
+        permalink: dto.permalink,
+      });
+      if (duplicateTag) {
+        throw new BadRequestException('TAG_PERMALINK_ALREADY_EXISTS');
+      }
+    }
+
     const tag = await this.tagModel.findByIdAndUpdate(id, dto, { new: true });
-    if (!tag) throw new NotFoundException('Tag not found');
     return tag.toObject();
   }
 

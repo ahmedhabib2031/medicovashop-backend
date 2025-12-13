@@ -22,6 +22,7 @@ import { UserRole } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateSellerProfileDto } from './dto/update-seller-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth('JWT-auth')
@@ -99,11 +100,30 @@ export class UsersController {
   }
 
   @Put('me')
-  async updateMe(@Req() req, @Body() body) {
-    const updated = await this.usersService.update(req.user.id, body);
+  @ApiOperation({
+    summary: 'Update user profile',
+    description:
+      'Update user profile information including first name, last name, profile image, and mobile phone number',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile successfully updated',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async updateMe(@Req() req, @Body() dto: UpdateProfileDto) {
+    const updateData: any = {};
+    if (dto.firstName !== undefined) updateData.firstName = dto.firstName;
+    if (dto.lastName !== undefined) updateData.lastName = dto.lastName;
+    if (dto.profileImage !== undefined)
+      updateData.profileImage = dto.profileImage;
+    if (dto.phone !== undefined) updateData.phone = dto.phone;
+
+    const updated = await this.usersService.update(req.user.id, updateData);
     const lang = this.getLang(req);
+    const obj = updated as any;
+    delete obj.password;
     return {
-      data: updated,
+      data: obj,
       message: await this.i18n.t('users.PROFILE_UPDATED', { lang }),
     };
   }

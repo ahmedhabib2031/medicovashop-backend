@@ -1,0 +1,17 @@
+{
+  "INVENTORY_CREATED": "تم إنشاء المخزون بنجاح",
+  "INVENTORY_RETRIEVED": "تم استرجاع المخزون بنجاح",
+  "INVENTORY_UPDATED": "تم تحديث المخزون بنجاح",
+  "INVENTORY_STATUS_UPDATED": "تم تحديث حالة المخزون بنجاح",
+  "INVENTORY_DELETED": "تم حذف المخزون بنجاح",
+  "INVENTORY_NOT_FOUND": "المخزون غير موجود",
+  "INVENTORY_ALREADY_EXISTS": "المخزون موجود بالفعل لهذا المنتج",
+  "INVENTORY_EXCEEDS_PRODUCT_STOCK": "إجمالي كمية المخزون يتجاوز كمية مخزون المنتج",
+  "DUPLICATE_VARIANT_COMBINATIONS": "تم العثور على تركيبات متغيرات مكررة",
+  "INVENTORY_NOT_OWNED_BY_SELLER": "ليس لديك إذن للوصول إلى هذا المخزون",
+  "PRODUCT_NOT_FOUND": "المنتج غير موجود",
+  "PRODUCT_NOT_OWNED_BY_SELLER": "ليس لديك إذن للوصول إلى هذا المنتج",
+  "INVALID_SIZE": "المقاس {size} غير متاح لهذا المنتج",
+  "INVALID_COLOR": "اللون {color} غير متاح لهذا المنتج"
+}
+

@@ -109,6 +109,7 @@ async function bootstrap() {
     .addTag('Customer Addresses', 'Customer address management endpoints')
     .addTag('Seller Brands', 'Seller brand management endpoints')
     .addTag('Seller Wishlists', 'Seller wishlist management endpoints')
+    .addTag('Inventory', 'Product inventory management endpoints')
     .addServer('http://localhost:3000', 'Development server')
     .addServer('https://www.medicova.cloud', 'Production server')
     .addServer('http://82.112.255.49', 'Production server (IP)')

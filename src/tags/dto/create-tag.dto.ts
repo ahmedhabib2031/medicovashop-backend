@@ -1,5 +1,5 @@
 // src/tags/dto/create-tag.dto.ts
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsObject, IsBoolean } from 'class-validator';
 
 export class CreateTagDto {
   @IsNotEmpty()
@@ -16,4 +16,12 @@ export class CreateTagDto {
 
   @IsOptional()
   descriptionEn?: string;
+
+  @IsOptional()
+  @IsObject()
+  seo?: Record<string, any>;
+
+  @IsOptional()
+  @IsBoolean()
+  status?: boolean;
 }

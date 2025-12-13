@@ -2,12 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { SubCategory, SubCategoryDocument } from './entities/subcategory.entity';
+import { SubcategoryChild, SubcategoryChildDocument } from '../subcategory-child/entities/subcategory-child.entity';
 import { CreateSubCategoryDto, UpdateSubCategoryDto } from './dto/subcategory.dto';
 
 @Injectable()
 export class SubCategoryService {
   constructor(
     @InjectModel(SubCategory.name) private subCategoryModel: Model<SubCategoryDocument>,
+    @InjectModel(SubcategoryChild.name) private subcategoryChildModel: Model<SubcategoryChildDocument>,
   ) {}
 
   async create(dto: CreateSubCategoryDto): Promise<SubCategory> {
@@ -91,7 +93,21 @@ const subCategories = await this.subCategoryModel
   }
 
   async remove(id: string): Promise<void> {
-    const deleted = await this.subCategoryModel.findByIdAndDelete(id);
-    if (!deleted) throw new NotFoundException('SUBCATEGORY_NOT_FOUND');
+    // Check if subcategory exists
+    const subCategory = await this.subCategoryModel.findById(id);
+    if (!subCategory) {
+      throw new NotFoundException('SUBCATEGORY_NOT_FOUND');
+    }
+
+    // Check if subcategory has children
+    const childrenCount = await this.subcategoryChildModel.countDocuments({
+      parentSubCategory: new Types.ObjectId(id),
+    });
+
+    if (childrenCount > 0) {
+      throw new BadRequestException('SUBCATEGORY_HAS_CHILDREN');
+    }
+
+    await this.subCategoryModel.findByIdAndDelete(id);
   }
 }

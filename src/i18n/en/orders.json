@@ -1,0 +1,30 @@
+{
+  "ORDER_CREATED": "Order created successfully",
+  "ORDERS_RETRIEVED": "Orders retrieved successfully",
+  "ORDER_RETRIEVED": "Order retrieved successfully",
+  "ORDER_UPDATED": "Order updated successfully",
+  "ORDER_STATUS_UPDATED": "Order status updated successfully",
+  "ORDER_DELETED": "Order cancelled/deleted successfully",
+  "ORDER_NOT_FOUND": "Order not found",
+  "ORDER_ACCESS_DENIED": "You don't have access to this order",
+  "ORDER_CANNOT_BE_UPDATED": "Order cannot be updated in current status",
+  "ORDER_CANNOT_BE_DELETED": "Order cannot be deleted in current status",
+  "SHIPPING_ADDRESS_NOT_FOUND": "Shipping address not found",
+  "PRODUCT_NOT_FOUND": "Product not found",
+  "PRODUCT_NOT_ACTIVE": "Product is not active",
+  "INSUFFICIENT_STOCK": "Insufficient stock available",
+  "INSUFFICIENT_VARIANT_STOCK": "Insufficient variant stock available",
+  "INVALID_SIZE": "Invalid size selected",
+  "INVALID_COLOR": "Invalid color selected",
+  "VARIANT_NOT_FOUND": "Product variant not found",
+  "COUPON_NOT_FOUND": "Coupon not found",
+  "COUPON_NOT_YET_ACTIVE": "Coupon is not yet active",
+  "COUPON_EXPIRED": "Coupon has expired",
+  "COUPON_NOT_ELIGIBLE": "You are not eligible for this coupon",
+  "COUPON_NOT_APPLICABLE_TO_PRODUCTS": "Coupon is not applicable to products in this order"
+}
+
+
+
+
+

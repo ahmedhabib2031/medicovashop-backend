@@ -1,0 +1,30 @@
+{
+  "ORDER_CREATED": "تم إنشاء الطلب بنجاح",
+  "ORDERS_RETRIEVED": "تم استرجاع الطلبات بنجاح",
+  "ORDER_RETRIEVED": "تم استرجاع الطلب بنجاح",
+  "ORDER_UPDATED": "تم تحديث الطلب بنجاح",
+  "ORDER_STATUS_UPDATED": "تم تحديث حالة الطلب بنجاح",
+  "ORDER_DELETED": "تم إلغاء/حذف الطلب بنجاح",
+  "ORDER_NOT_FOUND": "الطلب غير موجود",
+  "ORDER_ACCESS_DENIED": "ليس لديك صلاحية للوصول إلى هذا الطلب",
+  "ORDER_CANNOT_BE_UPDATED": "لا يمكن تحديث الطلب في الحالة الحالية",
+  "ORDER_CANNOT_BE_DELETED": "لا يمكن حذف الطلب في الحالة الحالية",
+  "SHIPPING_ADDRESS_NOT_FOUND": "عنوان الشحن غير موجود",
+  "PRODUCT_NOT_FOUND": "المنتج غير موجود",
+  "PRODUCT_NOT_ACTIVE": "المنتج غير نشط",
+  "INSUFFICIENT_STOCK": "المخزون غير كافٍ",
+  "INSUFFICIENT_VARIANT_STOCK": "مخزون المتغير غير كافٍ",
+  "INVALID_SIZE": "الحجم المحدد غير صحيح",
+  "INVALID_COLOR": "اللون المحدد غير صحيح",
+  "VARIANT_NOT_FOUND": "متغير المنتج غير موجود",
+  "COUPON_NOT_FOUND": "الكوبون غير موجود",
+  "COUPON_NOT_YET_ACTIVE": "الكوبون غير نشط بعد",
+  "COUPON_EXPIRED": "الكوبون منتهي الصلاحية",
+  "COUPON_NOT_ELIGIBLE": "أنت غير مؤهل لهذا الكوبون",
+  "COUPON_NOT_APPLICABLE_TO_PRODUCTS": "الكوبون غير قابل للتطبيق على منتجات هذا الطلب"
+}
+
+
+
+
+

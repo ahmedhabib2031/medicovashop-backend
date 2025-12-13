@@ -1,6 +1,6 @@
 // src/tags/entities/tag.entity.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type TagDocument = Tag & Document;
 
@@ -12,7 +12,7 @@ export class Tag {
   @Prop({ required: true })
   nameEn: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   permalink: string;
 
   @Prop({ required: false })
@@ -20,6 +20,17 @@ export class Tag {
 
   @Prop({ required: false })
   descriptionEn?: string;
+
+  // ---- SEO Meta (Dynamic Object) ----
+  @Prop({
+    type: MongooseSchema.Types.Mixed,
+    required: false,
+  })
+  seo?: Record<string, any>;
+
+  // ---- Status ----
+  @Prop({ type: Boolean, default: true })
+  status: boolean;
 }
 
 export const TagSchema = SchemaFactory.createForClass(Tag);
