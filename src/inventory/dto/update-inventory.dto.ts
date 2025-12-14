@@ -8,3 +8,4 @@ export class UpdateInventoryDto extends PartialType(CreateInventoryDto) {}
 
 
 
+

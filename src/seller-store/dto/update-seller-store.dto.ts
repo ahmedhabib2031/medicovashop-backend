@@ -57,3 +57,4 @@ export class UpdateSellerStoreDto extends PartialType(CreateSellerStoreDto) {
 
 
 
+

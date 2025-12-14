@@ -17,9 +17,7 @@ export class CreateProductAttributeDto {
   @IsNotEmpty()
   attributeType: string;
 
-  @ApiProperty({ example: 'grid', enum: ['grid', 'list'], description: 'Display layout for the attribute' })
-  @IsString()
-  @IsNotEmpty()
+  @ApiProperty({ example: 'grid', description: 'Display layout for the attribute' })
   displayLayout: string;
 
   @ApiProperty({ 
