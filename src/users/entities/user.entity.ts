@@ -27,6 +27,9 @@ export class User {
   phone: string | null;
 
   @Prop({ type: String, default: null })
+  phoneCode: string | null; // e.g., +20, +966, +1
+
+  @Prop({ type: String, default: null })
   SellerContactEmail: string | null;
 
   @Prop({ type: String, default: null })

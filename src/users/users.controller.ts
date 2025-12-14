@@ -211,7 +211,7 @@ export class UsersController {
   @ApiOperation({
     summary: 'Update seller profile',
     description:
-      'Update seller profile information including first name, last name, brand name, contact email, phone, location, and profile image (Seller only)',
+      'Update seller profile information including first name, last name, brand name, contact email, phone code, phone, location, and profile image (Seller only)',
   })
   @ApiResponse({
     status: 200,
@@ -228,6 +228,7 @@ export class UsersController {
     if (dto.brandName !== undefined) updateData.brandName = dto.brandName;
     if (dto.sellerContactEmail !== undefined)
       updateData.SellerContactEmail = dto.sellerContactEmail;
+    if (dto.phoneCode !== undefined) updateData.phoneCode = dto.phoneCode;
     if (dto.phone !== undefined) updateData.phone = dto.phone;
     if (dto.country !== undefined) updateData.country = dto.country;
     if (dto.state !== undefined) updateData.state = dto.state;

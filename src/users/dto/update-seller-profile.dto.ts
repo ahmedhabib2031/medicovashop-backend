@@ -39,14 +39,26 @@ export class UpdateSellerProfileDto {
   sellerContactEmail?: string;
 
   @ApiProperty({
-    example: '+201234567890',
-    description: 'Seller phone number',
+    example: '+20',
+    description: 'Phone country code (e.g., +20, +966, +1)',
     required: false,
   })
   @IsOptional()
   @IsString()
-  @Matches(/^\+?[1-9]\d{1,14}$/, {
-    message: 'Please provide a valid phone number (e.g., +201234567890)',
+  @Matches(/^\+[1-9]\d{1,3}$/, {
+    message: 'Please provide a valid phone code (e.g., +20, +966, +1)',
+  })
+  phoneCode?: string;
+
+  @ApiProperty({
+    example: '1234567890',
+    description: 'Seller phone number (without country code)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[0-9]{7,15}$/, {
+    message: 'Please provide a valid phone number (7-15 digits)',
   })
   phone?: string;
 
