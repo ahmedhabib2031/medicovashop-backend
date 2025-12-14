@@ -1,46 +1,98 @@
 {
-  "nameEn": "Premium Cotton T-Shirt",
-  "nameAr": "قميص قطني فاخر",
-  "permalink": "premium-cotton-t-shirt",
-  "category": "507f1f77bcf86cd799439011",
-  "subcategory": "507f1f77bcf86cd799439012",
-  "childCategory": "507f1f77bcf86cd799439013",
-  "brand": "507f1f77bcf86cd799439014",
-  "productType": "Physical Product",
-  "sku": "PROD-001",
-  "descriptionEn": "High quality cotton t-shirt with comfortable fit. Perfect for everyday wear. Made from 100% organic cotton.",
-  "descriptionAr": "قميص قطني عالي الجودة مع قصة مريحة. مثالي للارتداء اليومي. مصنوع من 100% قطن عضوي.",
-  "keyFeatures": [
-    {
-      "title": "Premium Quality",
-      "description": "Made with high-quality materials and superior craftsmanship",
-      "titleAr": "جودة فاخرة",
-      "descriptionAr": "مصنوع من مواد عالية الجودة وحرفية فائقة"
+    "nameEn": "Premium Cotton T-Shirt",
+    "nameAr": "قميص قطني فاخر",
+    "permalink": "premium-cotton-t-shirt",
+    "identity": {
+        "sku": "PROD-001",
+        "skuMode": "manual" // manual or auto-generated
     },
-    {
-      "title": "Eco Friendly",
-      "description": "Environmentally sustainable product made from organic materials",
-      "titleAr": "صديق للبيئة",
-      "descriptionAr": "منتج مستدام بيئياً مصنوع من مواد عضوية"
+    "classification": {
+        "category": "507f1f77bcf86cd799439011",
+        "subcategory": "507f1f77bcf86cd799439012",
+        "childCategory": "507f1f77bcf86cd799439013",
+        "brand": "507f1f77bcf86cd799439014",
+        "productType": "Physical Product"
     },
-    {
-      "title": "Comfortable Fit",
-      "description": "Designed for maximum comfort and ease of movement",
-      "titleAr": "قصة مريحة",
-      "descriptionAr": "مصمم للراحة القصوى وسهولة الحركة"
-    }
-  ],
-  "featuredImages": [
-    "https://example.com/featured1.jpg",
-    "https://example.com/featured2.jpg"
-  ],
-  "galleryImages": [
-    "https://example.com/gallery1.jpg",
-    "https://example.com/gallery2.jpg",
-    "https://example.com/gallery3.jpg",
-    "https://example.com/gallery4.jpg"
-  ],
-  "productVideo": "https://www.youtube.com/watch?v=example123",
-  "active": true,
-}
+    "descriptions": {
+            "descriptionEn": "High quality cotton t-shirt with comfortable fit. Perfect for everyday wear. Made from 100% organic cotton.",
+            "descriptionAr": "قميص قطني عالي الجودة مع قصة مريحة. مثالي للارتداء اليومي. مصنوع من 100% قطن عضوي."
+    },
+    "createdBy": "admin", // seller or admin and if seller then seller id is required  and if admin then admin id is required 
+    "keyFeatures": [
+        {
+            "titleEn": "Premium Quality",
+            "descriptionEn": "Made with high-quality materials and superior craftsmanship",
+            "titleAr": "جودة فاخرة",
+            "descriptionAr": "مصنوع من مواد عالية الجودة وحرفية فائقة"
+        }
+    ],
 
+    "media": {
+        "featuredImages": [
+            "https://example.com/featured1.jpg",
+            "https://example.com/featured2.jpg"
+        ],
+        "galleryImages": [
+            "https://example.com/gallery1.jpg",
+            "https://example.com/gallery2.jpg"
+        ],
+        "productVideo": "https://www.youtube.com/watch?v=example123"
+    },
+
+
+
+    "pricing": {
+        "originalPrice": 0,
+        "salePrice": 0,
+        "discount": {
+            "type": "percent",
+            "value": 3,
+            "amount": 0,
+            "startDate": null,
+            "endDate": null
+        }
+    },
+    "inventory": {
+        "trackStock": true,
+        "stockQuantity": 100,
+        "stockStatus": "in_stock",
+        "productType": "simple",
+        "skuGenerated": "PSKU_534406_1765723441653"
+    },
+    "variants": {
+        "sizes": [],
+        "colors": [],
+        "options": []
+    },
+    "shipping": {
+        "isPhysical": true,
+        "requiresShipping": true,
+        "weight": null
+    },
+
+
+    "specifications": [
+        {
+            "keyEn": "Material",
+            "valueEn": "Cotton",
+            "keyAr": "الخامة",
+            "valueAr": "قطن"
+        }
+    ],
+
+    "relations": {
+        "relatedProducts": [],
+        "crossSellingProducts": []
+    },
+    "checks": {
+        "title": true,
+        "price": true,
+        "sku": true,
+        "stock": false,
+        "details": false
+    },
+    "meta": {
+        "createdBy": "seller",
+        "profileCompletion": 40
+    }
+}

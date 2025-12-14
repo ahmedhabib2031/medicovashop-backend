@@ -315,7 +315,7 @@ export class SellerStoreController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Delete seller store',
     description: 'Delete a store (Admin only)',
