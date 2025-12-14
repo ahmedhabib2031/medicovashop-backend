@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsBoolean, IsNumber } from 'class-validator';
 
 export class FaqDto {
   @IsString()
@@ -55,6 +55,10 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsArray()
   metaKeywords?: string[];
+
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }
 
 export class UpdateCategoryDto {
@@ -109,6 +113,10 @@ export class UpdateCategoryDto {
   @IsOptional()
   @IsArray()
   metaKeywords?: string[];
+
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }
 
 

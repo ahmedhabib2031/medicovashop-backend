@@ -56,6 +56,7 @@ export class AttributesService {
 
     const attributes = await this.attributeModel
       .find(filter)
+      .sort({ sortOrder: 1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean()

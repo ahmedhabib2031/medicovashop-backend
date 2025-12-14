@@ -36,6 +36,10 @@ export class Category {
   @Prop({ required: true, default: true })
   active: boolean;
 
+  // ---- Sort Order ----
+  @Prop({ type: Number, default: 0 })
+  sortOrder: number;
+
   // ---- SEO Meta ----
   @Prop()
   metaTitle: string;

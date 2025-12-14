@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsArray, IsMongoId } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsMongoId, IsNumber } from 'class-validator';
 
 export class FaqDto {
   @IsString()
@@ -58,6 +58,10 @@ export class CreateSubcategoryChildDto {
 
   @IsMongoId()
   parentSubCategory: string;
+
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }
 
 export class UpdateSubcategoryChildDto extends CreateSubcategoryChildDto {}

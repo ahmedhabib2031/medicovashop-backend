@@ -33,6 +33,9 @@ export class SubcategoryChild {
   @Prop({ required: true, default: true })
   active: boolean;
 
+  @Prop({ type: Number, default: 0 })
+  sortOrder: number;
+
   @Prop()
   metaTitle: string;
 

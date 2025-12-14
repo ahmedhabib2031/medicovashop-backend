@@ -43,7 +43,8 @@ export class SubCategoryService {
     const total = await this.subCategoryModel.countDocuments(filter);
 
 const subCategories = await this.subCategoryModel
-  .find(filter, 'name nameAr image active parentCategory') // select fields
+  .find(filter, 'name nameAr image active parentCategory sortOrder') // select fields
+  .sort({ sortOrder: 1, createdAt: -1 })
   .skip(skip)
   .limit(limit)
   .populate({

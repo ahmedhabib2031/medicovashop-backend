@@ -23,6 +23,9 @@ export class ProductAttribute {
   @Prop({ default: true })
   active: boolean;
 
+  @Prop({ type: Number, default: 0 })
+  sortOrder: number;
+
   @Prop({ type: [String], default: [] })
   categoriesIds: string[];
 

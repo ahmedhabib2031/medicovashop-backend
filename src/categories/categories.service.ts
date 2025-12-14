@@ -42,9 +42,10 @@ async findAll(query: {
     // Total count
     const total = await this.categoryModel.countDocuments(filter);
 
-    // Fetch categories with minimal fields
+    // Fetch categories with minimal fields, sorted by sortOrder
     const categories = await this.categoryModel
-      .find(filter, 'name nameAr image active')
+      .find(filter, 'name nameAr image active sortOrder')
+      .sort({ sortOrder: 1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean()

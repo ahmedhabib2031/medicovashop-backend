@@ -39,10 +39,10 @@ export class BrandService {
     const total = await this.brandModel.countDocuments(filter);
 
     const brands = await this.brandModel
-      .find(filter, 'name nameAr logo active priority')
+      .find(filter, 'name nameAr logo active priority sortOrder')
       .skip(skip)
       .limit(limit)
-      .sort({ priority: 1 })
+      .sort({ sortOrder: 1, priority: 1, createdAt: -1 })
       .lean();
 
     const data = brands.map(brand => ({

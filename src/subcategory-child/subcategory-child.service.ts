@@ -42,7 +42,8 @@ export class SubcategoryChildService {
     const total = await this.subcategoryChildModel.countDocuments(filter);
 
     const children = await this.subcategoryChildModel
-      .find(filter, 'name nameAr image active parentSubCategory')
+      .find(filter, 'name nameAr image active parentSubCategory sortOrder')
+      .sort({ sortOrder: 1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate({

@@ -28,4 +28,8 @@ export class CreateBrandDto {
   @IsOptional()
   @IsString()
   logo?: string;
+
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }

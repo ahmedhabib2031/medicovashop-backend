@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsArray, IsOptional, IsNotEmpty, IsMongoId } from 'class-validator';
+import { IsString, IsBoolean, IsArray, IsOptional, IsNotEmpty, IsMongoId, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductAttributeDto {
@@ -56,4 +56,9 @@ export class CreateProductAttributeDto {
   @IsArray()
   @IsMongoId({ each: true })
   subcategoriesIds?: string[];
+
+  @ApiProperty({ example: 0, description: 'Sort order for attribute ordering', required: false })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
 }

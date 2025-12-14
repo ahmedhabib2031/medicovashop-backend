@@ -23,6 +23,9 @@ export class Brand {
   @Prop({ default: 1 })
   priority: number;
 
+  @Prop({ type: Number, default: 0 })
+  sortOrder: number;
+
   @Prop({ required: true, default: true })
   active: boolean;
 }
