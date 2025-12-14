@@ -75,14 +75,23 @@ export class Product {
   }[];
 
   // Media
-  @Prop({ type: [String], default: [] })
-  featuredImages: string[]; // Featured images array
+  @Prop({ type: String, default: null })
+  featuredImages: string | null; // Featured image (single)
 
   @Prop({ type: [String], default: [] })
   galleryImages: string[]; // Gallery images array
 
-  @Prop({ type: String, default: null })
-  productVideo: string | null; // External video URL
+  @Prop({
+    type: {
+      vedioUrl: { type: String, default: null }, // Note: keeping typo as per user request
+      imageUrl: { type: String, default: null },
+    },
+    default: null,
+  })
+  productVideo: {
+    vedioUrl: string | null; // Note: keeping typo as per user request
+    imageUrl: string | null;
+  } | null;
 
   // Pricing
   @Prop({ type: Number, required: true })
@@ -91,22 +100,17 @@ export class Product {
   @Prop({ type: Number, default: null })
   salePrice: number | null; // Sale price
 
-  @Prop({
-    type: {
-      discountType: { type: String }, // 'percent' or 'fixed' (renamed from 'type' to avoid Mongoose conflict)
-      value: { type: Number }, // Discount percentage or fixed amount
-      amount: { type: Number }, // Calculated discount amount
-      startDate: { type: Date, default: null },
-      endDate: { type: Date, default: null },
-    },
-  })
-  discount?: {
-    type: string; // 'percent' or 'fixed' (mapped from discountType)
-    value: number;
-    amount: number;
-    startDate: Date | null;
-    endDate: Date | null;
-  } | null;
+  @Prop({ type: Number, default: null })
+  discountAmount: number | null; // Discount amount
+
+  @Prop({ type: Number, default: null })
+  discountPercantge: number | null; // Discount percentage (keeping typo as per user request)
+
+  @Prop({ type: Date, default: null })
+  startDate: Date | null; // Sale start date
+
+  @Prop({ type: Date, default: null })
+  endDate: Date | null; // Sale end date
 
   // Inventory
   @Prop({ type: Boolean, default: true })
@@ -121,9 +125,6 @@ export class Product {
   @Prop({ type: String, default: 'simple' })
   inventoryProductType: string; // 'simple', 'variable', etc.
 
-  @Prop({ type: String, default: null })
-  skuGenerated: string | null; // Auto-generated SKU if applicable
-
   // Variants
   @Prop({ type: [String], default: [] })
   sizes: string[];
@@ -131,12 +132,15 @@ export class Product {
   @Prop({ type: [String], default: [] })
   colors: string[];
 
-  @Prop({ type: [String], default: [] })
-  options: string[]; // Additional variant options
+  @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
+  variantsItems: any[]; // Variant items array
+
+  @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
+  options: any[]; // Additional variant options (array of objects)
 
   // Shipping
-  @Prop({ type: MongooseSchema.Types.Mixed, default: null })
-  shipping: any; // Shipping information object
+  @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
+  shipping: any[]; // Shipping information array
 
   // Specifications
   @Prop({

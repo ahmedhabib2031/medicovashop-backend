@@ -107,15 +107,12 @@ export class OrdersService {
 
       // Calculate item price (use sale price if available and within date range)
       let unitPrice = product.originalPrice;
-      // Check discount - handle both discountType (DB field) and type (API field)
-      const discount = product.discount as any;
       if (
         product.salePrice &&
-        discount &&
-        discount.startDate &&
-        discount.endDate &&
-        new Date() >= discount.startDate &&
-        new Date() <= discount.endDate
+        product.startDate &&
+        product.endDate &&
+        new Date() >= product.startDate &&
+        new Date() <= product.endDate
       ) {
         unitPrice = product.salePrice;
       }

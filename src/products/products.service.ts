@@ -16,14 +16,6 @@ export class ProductsService {
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
-  // Transform discount.discountType to discount.type for API response
-  private transformDiscount(product: any): any {
-    if (product.discount && product.discount.discountType) {
-      product.discount.type = product.discount.discountType;
-      delete product.discount.discountType;
-    }
-    return product;
-  }
 
   async create(dto: CreateProductDto, sellerId?: string, adminId?: string): Promise<Product> {
     // Check if permalink already exists
@@ -69,33 +61,24 @@ export class ProductsService {
       createdBy: dto.createdBy || (sellerId ? 'seller' : 'admin'),
       createdById: sellerId || adminId || null,
       keyFeatures: dto.keyFeatures || [],
-      featuredImages: dto.media?.featuredImages || [],
+      featuredImages: dto.media?.featuredImages || null,
       galleryImages: dto.media?.galleryImages || [],
       productVideo: dto.media?.productVideo || null,
       originalPrice: dto.pricing.originalPrice,
       salePrice: dto.pricing.salePrice || null,
-      discount: dto.pricing.discount
-        ? {
-            discountType: dto.pricing.discount.type || 'percent', // Store as discountType in DB
-            value: dto.pricing.discount.value || 0,
-            amount: dto.pricing.discount.amount || 0,
-            startDate: dto.pricing.discount.startDate
-              ? new Date(dto.pricing.discount.startDate)
-              : null,
-            endDate: dto.pricing.discount.endDate
-              ? new Date(dto.pricing.discount.endDate)
-              : null,
-          }
-        : null,
+      discountAmount: dto.pricing.discountAmount || null,
+      discountPercantge: dto.pricing.discountPercantge || null,
+      startDate: dto.pricing.startDate ? new Date(dto.pricing.startDate) : null,
+      endDate: dto.pricing.endDate ? new Date(dto.pricing.endDate) : null,
       trackStock: dto.inventory?.trackStock !== undefined ? dto.inventory.trackStock : true,
       stockQuantity: dto.inventory?.stockQuantity || 0,
       stockStatus: dto.inventory?.stockStatus || 'in_stock',
       inventoryProductType: dto.inventory?.productType || 'simple',
-      skuGenerated: dto.inventory?.skuGenerated || sku,
       sizes: dto.variants?.sizes || [],
       colors: dto.variants?.colors || [],
+      variantsItems: dto.variants?.variantsItems || [],
       options: dto.variants?.options || [],
-      shipping: dto.shipping || null,
+      shipping: dto.shipping || [],
       specifications: dto.specifications || [],
       relatedProducts: dto.relations?.relatedProducts || [],
       crossSellingProducts: dto.relations?.crossSellingProducts || [],
@@ -109,7 +92,7 @@ export class ProductsService {
 
     const createdProduct = await this.productModel.create(productData);
     
-    // Populate and transform for response
+    // Populate for response
     const populated = await this.productModel
       .findById(createdProduct._id)
       .populate('category', 'name nameAr')
@@ -120,7 +103,7 @@ export class ProductsService {
       .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
-    return this.transformDiscount(populated) as Product;
+    return populated as Product;
   }
 
   async findAll(query: {
@@ -202,10 +185,7 @@ export class ProductsService {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Transform discount.discountType to discount.type
-    const transformedProducts = products.map(p => this.transformDiscount(p));
-
-    return { data: transformedProducts as Product[], total };
+    return { data: products as Product[], total };
   }
 
   async findOne(id: string): Promise<Product> {
@@ -225,10 +205,7 @@ export class ProductsService {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
     }
 
-    // Transform discount.discountType to discount.type
-    const transformedProduct = this.transformDiscount(product);
-
-    return transformedProduct as Product;
+    return product as Product;
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<Product> {
@@ -300,21 +277,10 @@ export class ProductsService {
     if (dto.pricing) {
       if (dto.pricing.originalPrice !== undefined) updateData.originalPrice = dto.pricing.originalPrice;
       if (dto.pricing.salePrice !== undefined) updateData.salePrice = dto.pricing.salePrice || null;
-      if (dto.pricing.discount !== undefined) {
-        updateData.discount = dto.pricing.discount
-          ? {
-              discountType: dto.pricing.discount.type || 'percent', // Store as discountType in DB
-              value: dto.pricing.discount.value || 0,
-              amount: dto.pricing.discount.amount || 0,
-              startDate: dto.pricing.discount.startDate
-                ? new Date(dto.pricing.discount.startDate)
-                : null,
-              endDate: dto.pricing.discount.endDate
-                ? new Date(dto.pricing.discount.endDate)
-                : null,
-            }
-          : null;
-      }
+      if (dto.pricing.discountAmount !== undefined) updateData.discountAmount = dto.pricing.discountAmount || null;
+      if (dto.pricing.discountPercantge !== undefined) updateData.discountPercantge = dto.pricing.discountPercantge || null;
+      if (dto.pricing.startDate !== undefined) updateData.startDate = dto.pricing.startDate ? new Date(dto.pricing.startDate) : null;
+      if (dto.pricing.endDate !== undefined) updateData.endDate = dto.pricing.endDate ? new Date(dto.pricing.endDate) : null;
     }
 
     // Inventory
@@ -323,18 +289,18 @@ export class ProductsService {
       if (dto.inventory.stockQuantity !== undefined) updateData.stockQuantity = dto.inventory.stockQuantity;
       if (dto.inventory.stockStatus !== undefined) updateData.stockStatus = dto.inventory.stockStatus;
       if (dto.inventory.productType !== undefined) updateData.inventoryProductType = dto.inventory.productType;
-      if (dto.inventory.skuGenerated !== undefined) updateData.skuGenerated = dto.inventory.skuGenerated;
     }
 
     // Variants
     if (dto.variants) {
       if (dto.variants.sizes !== undefined) updateData.sizes = dto.variants.sizes;
       if (dto.variants.colors !== undefined) updateData.colors = dto.variants.colors;
+      if (dto.variants.variantsItems !== undefined) updateData.variantsItems = dto.variants.variantsItems;
       if (dto.variants.options !== undefined) updateData.options = dto.variants.options;
     }
 
     // Shipping
-    if (dto.shipping !== undefined) updateData.shipping = dto.shipping;
+    if (dto.shipping !== undefined) updateData.shipping = dto.shipping || [];
 
     // Specifications
     if (dto.specifications !== undefined) updateData.specifications = dto.specifications;
@@ -364,10 +330,7 @@ export class ProductsService {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
     }
 
-    // Transform discount.discountType to discount.type
-    const transformedProduct = this.transformDiscount(product);
-
-    return transformedProduct as Product;
+    return product as Product;
   }
 
   async updateStatus(
@@ -390,10 +353,7 @@ export class ProductsService {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
     }
 
-    // Transform discount.discountType to discount.type
-    const transformedProduct = this.transformDiscount(product);
-
-    return transformedProduct as Product;
+    return product as Product;
   }
 
   async remove(id: string): Promise<{ deleted: true }> {

@@ -124,57 +124,6 @@ class KeyFeatureDto {
   descriptionAr: string;
 }
 
-// Discount DTO
-class DiscountDto {
-  @ApiProperty({
-    example: 'percent',
-    description: 'Discount type: percent or fixed',
-    enum: ['percent', 'fixed'],
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(['percent', 'fixed'])
-  type?: string;
-
-  @ApiProperty({
-    example: 10,
-    description: 'Discount value (percentage or fixed amount)',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  value?: number;
-
-  @ApiProperty({
-    example: 9.99,
-    description: 'Calculated discount amount',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  amount?: number;
-
-  @ApiProperty({
-    example: '2024-01-01T00:00:00Z',
-    description: 'Discount start date',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  startDate?: string | null;
-
-  @ApiProperty({
-    example: '2024-12-31T23:59:59Z',
-    description: 'Discount end date',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  endDate?: string | null;
-}
-
 // Pricing DTO
 class PricingDto {
   @ApiProperty({ example: 99.99, description: 'Original price' })
@@ -194,14 +143,42 @@ class PricingDto {
   salePrice?: number;
 
   @ApiProperty({
-    description: 'Discount information',
-    type: DiscountDto,
+    example: 10,
+    description: 'Discount amount (optional)',
     required: false,
   })
   @IsOptional()
-  @ValidateNested()
-  @Type(() => DiscountDto)
-  discount?: DiscountDto;
+  @IsNumber()
+  @Min(0)
+  discountAmount?: number;
+
+  @ApiProperty({
+    example: 10,
+    description: 'Discount percentage (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discountPercantge?: number; // Note: keeping typo as per user request
+
+  @ApiProperty({
+    example: '2024-01-01T00:00:00Z',
+    description: 'Sale start date (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string | null;
+
+  @ApiProperty({
+    example: '2024-12-31T23:59:59Z',
+    description: 'Sale end date (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string | null;
 }
 
 // Inventory DTO
@@ -242,15 +219,6 @@ class InventoryDto {
   @IsOptional()
   @IsString()
   productType?: string;
-
-  @ApiProperty({
-    example: 'PSKU_534406_1765723441653',
-    description: 'Auto-generated SKU',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  skuGenerated?: string;
 }
 
 // Variants DTO
@@ -278,15 +246,24 @@ class VariantsDto {
   colors?: string[];
 
   @ApiProperty({
-    example: ['Option1', 'Option2'],
-    description: 'Additional variant options',
-    type: [String],
+    example: [{}, {}],
+    description: 'Variant items array',
+    type: [Object],
     required: false,
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  options?: string[];
+  variantsItems?: any[];
+
+  @ApiProperty({
+    example: [{}, {}],
+    description: 'Additional variant options (array of objects)',
+    type: [Object],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  options?: any[];
 }
 
 // Specification DTO
@@ -312,18 +289,37 @@ class SpecificationDto {
   valueAr: string;
 }
 
-// Media DTO
-class MediaDto {
+// Product Video DTO
+class ProductVideoDto {
   @ApiProperty({
-    example: ['https://example.com/featured1.jpg', 'https://example.com/featured2.jpg'],
-    description: 'Featured images URLs',
-    type: [String],
+    example: 'https://www.youtube.com/watch?v=example123',
+    description: 'Video URL',
     required: false,
   })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  featuredImages?: string[];
+  @IsString()
+  vedioUrl?: string; // Note: keeping typo as per user request
+
+  @ApiProperty({
+    example: 'https://example.com/video-thumbnail.jpg',
+    description: 'Video thumbnail image URL',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+}
+
+// Media DTO
+class MediaDto {
+  @ApiProperty({
+    example: 'https://example.com/images/gallery1.jpg',
+    description: 'Featured image URL (single)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  featuredImages?: string;
 
   @ApiProperty({
     example: ['https://example.com/gallery1.jpg', 'https://example.com/gallery2.jpg'],
@@ -337,13 +333,14 @@ class MediaDto {
   galleryImages?: string[];
 
   @ApiProperty({
-    example: 'https://www.youtube.com/watch?v=example123',
-    description: 'Product video URL',
+    description: 'Product video information',
+    type: ProductVideoDto,
     required: false,
   })
   @IsOptional()
-  @IsString()
-  productVideo?: string;
+  @ValidateNested()
+  @Type(() => ProductVideoDto)
+  productVideo?: ProductVideoDto;
 }
 
 // Relations DTO
@@ -489,12 +486,13 @@ export class CreateProductDto {
 
   // Shipping
   @ApiProperty({
-    description: 'Shipping information (object)',
-    type: Object,
+    description: 'Shipping information (array of objects)',
+    type: [Object],
     required: false,
   })
   @IsOptional()
-  shipping?: any;
+  @IsArray()
+  shipping?: any[];
 
   // Specifications
   @ApiProperty({
