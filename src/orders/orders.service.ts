@@ -50,7 +50,7 @@ export class OrdersService {
       }
 
       if (!product.active) {
-        throw new BadRequestException(`PRODUCT_NOT_ACTIVE: ${product.productName}`);
+        throw new BadRequestException(`PRODUCT_NOT_ACTIVE: ${product.nameEn}`);
       }
 
       // Track seller ID
@@ -61,19 +61,19 @@ export class OrdersService {
       // Validate quantity against stock
       if (itemDto.quantity > product.stockQuantity) {
         throw new BadRequestException(
-          `INSUFFICIENT_STOCK: ${product.productName} - Available: ${product.stockQuantity}, Requested: ${itemDto.quantity}`,
+          `INSUFFICIENT_STOCK: ${product.nameEn} - Available: ${product.stockQuantity}, Requested: ${itemDto.quantity}`,
         );
       }
 
       // Validate size and colors if provided
       if (itemDto.size && !product.sizes.includes(itemDto.size)) {
-        throw new BadRequestException(`INVALID_SIZE: ${itemDto.size} not available for ${product.productName}`);
+        throw new BadRequestException(`INVALID_SIZE: ${itemDto.size} not available for ${product.nameEn}`);
       }
 
       if (itemDto.colors && itemDto.colors.length > 0) {
         for (const color of itemDto.colors) {
           if (!product.colors.includes(color)) {
-            throw new BadRequestException(`INVALID_COLOR: ${color} not available for ${product.productName}`);
+            throw new BadRequestException(`INVALID_COLOR: ${color} not available for ${product.nameEn}`);
           }
         }
       }
@@ -106,13 +106,16 @@ export class OrdersService {
       }
 
       // Calculate item price (use sale price if available and within date range)
-      let unitPrice = product.price;
+      let unitPrice = product.originalPrice;
+      // Check discount - handle both discountType (DB field) and type (API field)
+      const discount = product.discount as any;
       if (
         product.salePrice &&
-        product.saleStartDate &&
-        product.saleEndDate &&
-        new Date() >= product.saleStartDate &&
-        new Date() <= product.saleEndDate
+        discount &&
+        discount.startDate &&
+        discount.endDate &&
+        new Date() >= discount.startDate &&
+        new Date() <= discount.endDate
       ) {
         unitPrice = product.salePrice;
       }
@@ -142,8 +145,8 @@ export class OrdersService {
       // Build order item
       orderItems.push({
         productId: product._id,
-        productName: product.productName,
-        productNameAr: product.productNameAr,
+        productName: product.nameEn,
+        productNameAr: product.nameAr,
         sku: product.sku,
         quantity: itemDto.quantity,
         size: itemDto.size || null,
@@ -151,7 +154,7 @@ export class OrdersService {
         unitPrice,
         discount: 0, // Will be calculated after coupon application
         subtotal: itemSubtotal,
-        productImage: product.productImages?.[0] || null,
+        productImage: product.featuredImages?.[0] || product.galleryImages?.[0] || null,
       });
     }
 
@@ -305,7 +308,7 @@ export class OrdersService {
       { path: 'customerId', select: 'firstName lastName email phone' },
       { path: 'shippingAddressId' },
       { path: 'couponId' },
-      { path: 'items.productId', select: 'productName productNameAr sku' },
+      { path: 'items.productId', select: 'nameEn nameAr sku' },
     ]);
   }
 
@@ -355,7 +358,7 @@ export class OrdersService {
         .populate('customerId', 'firstName lastName email phone')
         .populate('shippingAddressId')
         .populate('couponId', 'discountName discountCode discountType discountValue')
-        .populate('items.productId', 'productName productNameAr sku productImages')
+        .populate('items.productId', 'nameEn nameAr sku featuredImages galleryImages')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -404,7 +407,7 @@ export class OrdersService {
       { path: 'customerId', select: 'firstName lastName email phone' },
       { path: 'shippingAddressId' },
       { path: 'couponId', select: 'discountName discountCode discountType discountValue' },
-      { path: 'items.productId', select: 'productName productNameAr sku productImages' },
+      { path: 'items.productId', select: 'nameEn nameAr sku featuredImages galleryImages' },
     ]);
 
     return order;

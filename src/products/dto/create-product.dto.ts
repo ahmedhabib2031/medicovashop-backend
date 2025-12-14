@@ -7,6 +7,7 @@ import {
   IsMongoId,
   IsBoolean,
   IsDateString,
+  IsEnum,
   Min,
   ValidateNested,
   Matches,
@@ -14,71 +15,33 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-class SpecificationDto {
-  @ApiProperty({ example: 'Material', description: 'Specification key' })
+// Identity DTO
+class IdentityDto {
+  @ApiProperty({
+    example: 'PROD-001',
+    description: 'Product SKU (required if skuMode is manual)',
+    required: false,
+  })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  key: string;
-
-  @ApiProperty({ example: 'Cotton', description: 'Specification value' })
-  @IsString()
-  @IsNotEmpty()
-  value: string;
-}
-
-class ProductImageVariantDto {
-  @ApiProperty({ example: 'Red-Small', description: 'Variant identifier' })
-  @IsString()
-  @IsNotEmpty()
-  variant: string;
+  sku?: string;
 
   @ApiProperty({
-    example: ['https://example.com/variant1.jpg', 'https://example.com/variant2.jpg'],
-    description: 'Images for this variant',
-    type: [String],
+    example: 'manual',
+    description: 'SKU mode: manual or auto-generated',
+    enum: ['manual', 'auto-generated'],
+    required: false,
   })
-  @IsArray()
-  @IsString({ each: true })
-  images: string[];
+  @IsOptional()
+  @IsEnum(['manual', 'auto-generated'])
+  skuMode?: string;
 }
 
-export class CreateProductDto {
-  // Basic Information
-  @ApiProperty({ example: 'Premium Cotton T-Shirt', description: 'Product name in English' })
-  @IsString()
-  @IsNotEmpty()
-  productName: string;
-
-  @ApiProperty({ example: 'قميص قطني فاخر', description: 'Product name in Arabic' })
-  @IsString()
-  @IsNotEmpty()
-  productNameAr: string;
-
-  @ApiProperty({ example: 'Premium Cotton T-Shirt', description: 'Product title in English' })
-  @IsString()
-  @IsNotEmpty()
-  productTitle: string;
-
-  @ApiProperty({ example: 'قميص قطني فاخر', description: 'Product title in Arabic' })
-  @IsString()
-  @IsNotEmpty()
-  productTitleAr: string;
-
-  @ApiProperty({
-    example: 'premium-cotton-t-shirt',
-    description: 'URL-friendly permalink (slug)',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Permalink must be lowercase alphanumeric with hyphens only',
-  })
-  permalink: string;
-
-  // Relations
+// Classification DTO
+class ClassificationDto {
   @ApiProperty({
     example: '507f1f77bcf86cd799439011',
-    description: 'Category ID',
+    description: 'Main Category ID',
   })
   @IsMongoId()
   @IsNotEmpty()
@@ -94,6 +57,15 @@ export class CreateProductDto {
 
   @ApiProperty({
     example: '507f1f77bcf86cd799439013',
+    description: 'Child Category ID (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsMongoId()
+  childCategory?: string;
+
+  @ApiProperty({
+    example: '507f1f77bcf86cd799439014',
     description: 'Brand ID',
   })
   @IsMongoId()
@@ -101,31 +73,24 @@ export class CreateProductDto {
   brand: string;
 
   @ApiProperty({
-    example: '507f1f77bcf86cd799439014',
-    description: 'Store ID (SellerStore)',
-  })
-  @IsMongoId()
-  @IsNotEmpty()
-  store: string;
-
-  // Product Identity
-  @ApiProperty({
-    example: 'PROD-001',
-    description: 'Product SKU (can be manual or auto-generated, leave empty to auto-generate)',
+    example: 'Physical Product',
+    description: 'Product type',
     required: false,
   })
   @IsOptional()
   @IsString()
-  sku?: string;
+  productType?: string;
+}
 
-  // Descriptions
+// Descriptions DTO
+class DescriptionsDto {
   @ApiProperty({
     example: 'High quality cotton t-shirt with comfortable fit',
     description: 'Product description in English',
   })
   @IsString()
   @IsNotEmpty()
-  productDescription: string;
+  descriptionEn: string;
 
   @ApiProperty({
     example: 'قميص قطني عالي الجودة مع قصة مريحة',
@@ -133,74 +98,94 @@ export class CreateProductDto {
   })
   @IsString()
   @IsNotEmpty()
-  productDescriptionAr: string;
+  descriptionAr: string;
+}
 
-  // Features
-  @ApiProperty({
-    example: ['100% Cotton', 'Machine Washable', 'Comfortable Fit'],
-    description: 'Key features in English',
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  keyFeatures?: string[];
-
-  @ApiProperty({
-    example: ['100% قطن', 'قابل للغسيل في الغسالة', 'قصة مريحة'],
-    description: 'Key features in Arabic',
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  keyFeaturesAr?: string[];
-
-  // Highlights
-  @ApiProperty({
-    example: ['Premium Quality', 'Eco Friendly', 'Best Seller'],
-    description: 'Product highlights in English',
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  productHighlights?: string[];
-
-  @ApiProperty({
-    example: ['جودة فاخرة', 'صديق للبيئة', 'الأكثر مبيعاً'],
-    description: 'Product highlights in Arabic',
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  productHighlightsAr?: string[];
-
-  // Delivery
-  @ApiProperty({
-    example: '3-5 business days',
-    description: 'Delivery time',
-    required: false,
-  })
-  @IsOptional()
+// Key Feature DTO
+class KeyFeatureDto {
+  @ApiProperty({ example: 'Premium Quality', description: 'Feature title in English' })
   @IsString()
-  deliveryTime?: string;
+  @IsNotEmpty()
+  titleEn: string;
 
-  // Pricing
-  @ApiProperty({ example: 99.99, description: 'Product price in USD' })
+  @ApiProperty({ example: 'Made with high-quality materials', description: 'Feature description in English' })
+  @IsString()
+  @IsNotEmpty()
+  descriptionEn: string;
+
+  @ApiProperty({ example: 'جودة فاخرة', description: 'Feature title in Arabic' })
+  @IsString()
+  @IsNotEmpty()
+  titleAr: string;
+
+  @ApiProperty({ example: 'مصنوع من مواد عالية الجودة', description: 'Feature description in Arabic' })
+  @IsString()
+  @IsNotEmpty()
+  descriptionAr: string;
+}
+
+// Discount DTO
+class DiscountDto {
+  @ApiProperty({
+    example: 'percent',
+    description: 'Discount type: percent or fixed',
+    enum: ['percent', 'fixed'],
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(['percent', 'fixed'])
+  type?: string;
+
+  @ApiProperty({
+    example: 10,
+    description: 'Discount value (percentage or fixed amount)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  value?: number;
+
+  @ApiProperty({
+    example: 9.99,
+    description: 'Calculated discount amount',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  amount?: number;
+
+  @ApiProperty({
+    example: '2024-01-01T00:00:00Z',
+    description: 'Discount start date',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string | null;
+
+  @ApiProperty({
+    example: '2024-12-31T23:59:59Z',
+    description: 'Discount end date',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string | null;
+}
+
+// Pricing DTO
+class PricingDto {
+  @ApiProperty({ example: 99.99, description: 'Original price' })
   @IsNumber()
   @Min(0)
   @IsNotEmpty()
-  price: number;
+  originalPrice: number;
 
   @ApiProperty({
     example: 79.99,
-    description: 'Sale price in USD (optional)',
+    description: 'Sale price (optional)',
     required: false,
   })
   @IsOptional()
@@ -209,83 +194,67 @@ export class CreateProductDto {
   salePrice?: number;
 
   @ApiProperty({
-    example: '2024-01-01T00:00:00Z',
-    description: 'Sale start date (optional)',
+    description: 'Discount information',
+    type: DiscountDto,
     required: false,
   })
   @IsOptional()
-  @IsDateString()
-  saleStartDate?: string;
+  @ValidateNested()
+  @Type(() => DiscountDto)
+  discount?: DiscountDto;
+}
+
+// Inventory DTO
+class InventoryDto {
+  @ApiProperty({
+    example: true,
+    description: 'Whether to track stock',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  trackStock?: boolean;
 
   @ApiProperty({
-    example: '2024-12-31T23:59:59Z',
-    description: 'Sale end date (optional)',
+    example: 100,
+    description: 'Stock quantity',
     required: false,
   })
-  @IsOptional()
-  @IsDateString()
-  saleEndDate?: string;
-
-  // Inventory & Weight
-  @ApiProperty({ example: 100, description: 'Stock quantity', required: false })
   @IsOptional()
   @IsNumber()
   @Min(0)
   stockQuantity?: number;
 
   @ApiProperty({
-    example: 0.5,
-    description: 'Product weight in kg (optional)',
+    example: 'in_stock',
+    description: 'Stock status',
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  weight?: number;
+  @IsString()
+  stockStatus?: string;
 
   @ApiProperty({
-    example: [500, 750, 1000],
-    description: 'Shipping weights in grams (array)',
-    type: [Number],
+    example: 'simple',
+    description: 'Product type for inventory',
     required: false,
   })
   @IsOptional()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  shippingWeight?: number[];
+  @IsString()
+  productType?: string;
 
   @ApiProperty({
-    example: 30,
-    description: 'Length in cm (optional)',
+    example: 'PSKU_534406_1765723441653',
+    description: 'Auto-generated SKU',
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  length?: number;
+  @IsString()
+  skuGenerated?: string;
+}
 
-  @ApiProperty({
-    example: 20,
-    description: 'Width in cm (optional)',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  width?: number;
-
-  @ApiProperty({
-    example: 5,
-    description: 'Height in cm (optional)',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  height?: number;
-
-  // Variants
+// Variants DTO
+class VariantsDto {
   @ApiProperty({
     example: ['S', 'M', 'L', 'XL'],
     description: 'Available sizes',
@@ -308,12 +277,227 @@ export class CreateProductDto {
   @IsString({ each: true })
   colors?: string[];
 
+  @ApiProperty({
+    example: ['Option1', 'Option2'],
+    description: 'Additional variant options',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  options?: string[];
+}
+
+// Specification DTO
+class SpecificationDto {
+  @ApiProperty({ example: 'Material', description: 'Specification key in English' })
+  @IsString()
+  @IsNotEmpty()
+  keyEn: string;
+
+  @ApiProperty({ example: 'Cotton', description: 'Specification value in English' })
+  @IsString()
+  @IsNotEmpty()
+  valueEn: string;
+
+  @ApiProperty({ example: 'الخامة', description: 'Specification key in Arabic' })
+  @IsString()
+  @IsNotEmpty()
+  keyAr: string;
+
+  @ApiProperty({ example: 'قطن', description: 'Specification value in Arabic' })
+  @IsString()
+  @IsNotEmpty()
+  valueAr: string;
+}
+
+// Media DTO
+class MediaDto {
+  @ApiProperty({
+    example: ['https://example.com/featured1.jpg', 'https://example.com/featured2.jpg'],
+    description: 'Featured images URLs',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  featuredImages?: string[];
+
+  @ApiProperty({
+    example: ['https://example.com/gallery1.jpg', 'https://example.com/gallery2.jpg'],
+    description: 'Gallery images URLs',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  galleryImages?: string[];
+
+  @ApiProperty({
+    example: 'https://www.youtube.com/watch?v=example123',
+    description: 'Product video URL',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  productVideo?: string;
+}
+
+// Relations DTO
+class RelationsDto {
+  @ApiProperty({
+    example: ['507f1f77bcf86cd799439015', '507f1f77bcf86cd799439016'],
+    description: 'Related product IDs',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  relatedProducts?: string[];
+
+  @ApiProperty({
+    example: ['507f1f77bcf86cd799439017', '507f1f77bcf86cd799439018'],
+    description: 'Cross-selling product IDs',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  crossSellingProducts?: string[];
+}
+
+// Main Create Product DTO
+export class CreateProductDto {
+  // Basic Information
+  @ApiProperty({ example: 'Premium Cotton T-Shirt', description: 'Product name in English' })
+  @IsString()
+  @IsNotEmpty()
+  nameEn: string;
+
+  @ApiProperty({ example: 'قميص قطني فاخر', description: 'Product name in Arabic' })
+  @IsString()
+  @IsNotEmpty()
+  nameAr: string;
+
+  @ApiProperty({
+    example: 'premium-cotton-t-shirt',
+    description: 'URL-friendly permalink (slug)',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: 'Permalink must be lowercase alphanumeric with hyphens only',
+  })
+  permalink: string;
+
+  // Identity
+  @ApiProperty({
+    description: 'Product identity (SKU and mode)',
+    type: IdentityDto,
+  })
+  @ValidateNested()
+  @Type(() => IdentityDto)
+  identity: IdentityDto;
+
+  // Classification
+  @ApiProperty({
+    description: 'Product classification (category, subcategory, brand, etc.)',
+    type: ClassificationDto,
+  })
+  @ValidateNested()
+  @Type(() => ClassificationDto)
+  classification: ClassificationDto;
+
+  // Descriptions
+  @ApiProperty({
+    description: 'Product descriptions in English and Arabic',
+    type: DescriptionsDto,
+  })
+  @ValidateNested()
+  @Type(() => DescriptionsDto)
+  descriptions: DescriptionsDto;
+
+  // Created By
+  @ApiProperty({
+    example: 'seller',
+    description: 'Who created the product: admin or seller',
+    enum: ['admin', 'seller'],
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(['admin', 'seller'])
+  createdBy?: string;
+
+  // Key Features
+  @ApiProperty({
+    description: 'Key features with titles and descriptions in both languages',
+    type: [KeyFeatureDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => KeyFeatureDto)
+  keyFeatures?: KeyFeatureDto[];
+
+  // Media
+  @ApiProperty({
+    description: 'Product media (images and video)',
+    type: MediaDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MediaDto)
+  media?: MediaDto;
+
+  // Pricing
+  @ApiProperty({
+    description: 'Product pricing information',
+    type: PricingDto,
+  })
+  @ValidateNested()
+  @Type(() => PricingDto)
+  pricing: PricingDto;
+
+  // Inventory
+  @ApiProperty({
+    description: 'Product inventory information',
+    type: InventoryDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => InventoryDto)
+  inventory?: InventoryDto;
+
+  // Variants
+  @ApiProperty({
+    description: 'Product variants (sizes, colors, options)',
+    type: VariantsDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => VariantsDto)
+  variants?: VariantsDto;
+
+  // Shipping
+  @ApiProperty({
+    description: 'Shipping information (object)',
+    type: Object,
+    required: false,
+  })
+  @IsOptional()
+  shipping?: any;
+
   // Specifications
   @ApiProperty({
-    example: [
-      { key: 'Material', value: 'Cotton' },
-      { key: 'Size', value: 'Medium' },
-    ],
     description: 'Product specifications',
     type: [SpecificationDto],
     required: false,
@@ -324,53 +508,24 @@ export class CreateProductDto {
   @Type(() => SpecificationDto)
   specifications?: SpecificationDto[];
 
-  // Images
+  // Relations
   @ApiProperty({
-    example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
-    description: 'Main product images URLs',
-    type: [String],
+    description: 'Product relations (related and cross-selling products)',
+    type: RelationsDto,
     required: false,
   })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  productImages?: string[];
+  @ValidateNested()
+  @Type(() => RelationsDto)
+  relations?: RelationsDto;
 
+  // Store (required for seller, optional for admin)
   @ApiProperty({
-    example: [
-      {
-        variant: 'Red-Small',
-        images: ['https://example.com/red-small-1.jpg', 'https://example.com/red-small-2.jpg'],
-      },
-    ],
-    description: 'Product image variants',
-    type: [ProductImageVariantDto],
+    example: '507f1f77bcf86cd799439014',
+    description: 'Store ID (SellerStore) - required for seller (will use first store if not provided), optional for admin',
     required: false,
   })
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ProductImageVariantDto)
-  productImageVariants?: ProductImageVariantDto[];
-
-  // Related Products
-  @ApiProperty({
-    example: ['507f1f77bcf86cd799439015', '507f1f77bcf86cd799439016'],
-    description: 'Related product IDs for cross-selling',
-    type: [String],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsMongoId({ each: true })
-  relatedProducts?: string[];
-
-  @ApiProperty({
-    example: true,
-    description: 'Product active status',
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  active?: boolean;
+  @IsMongoId()
+  store?: string;
 }

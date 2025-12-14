@@ -31,6 +31,7 @@ import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { I18nService } from 'nestjs-i18n';
 import { formatResponse } from '../common/utils/response.util';
+import { SellerStoreService } from '../seller-store/seller-store.service';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
@@ -40,6 +41,7 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly i18n: I18nService,
+    private readonly sellerStoreService: SellerStoreService,
   ) {}
 
   private getLang(req: any) {
@@ -57,8 +59,44 @@ export class ProductsController {
   async create(@Body() dto: CreateProductDto, @Req() req) {
     try {
       const sellerId =
-        req.user.role === UserRole.SELLER ? req.user.id : undefined;
-      const product = await this.productsService.create(dto, sellerId);
+        req.user.role === UserRole.SELLER ? req.user.id || req.user.userId : undefined;
+      const adminId =
+        req.user.role === UserRole.ADMIN ? req.user.id || req.user.userId : undefined;
+      
+      // Set createdBy based on role if not provided
+      if (!dto.createdBy) {
+        dto.createdBy = req.user.role === UserRole.SELLER ? 'seller' : 'admin';
+      }
+      
+      // Validate createdBy matches user role
+      if (dto.createdBy === 'seller' && !sellerId) {
+        throw new BadRequestException('Seller ID is required when createdBy is seller');
+      }
+      if (dto.createdBy === 'admin' && !adminId) {
+        throw new BadRequestException('Admin ID is required when createdBy is admin');
+      }
+
+      // For sellers: store is required - if not provided, get their first store
+      if (req.user.role === UserRole.SELLER) {
+        if (!dto.store) {
+          const sellerStores = await this.sellerStoreService.findBySellerId(sellerId);
+          if (!sellerStores || sellerStores.length === 0) {
+            throw new BadRequestException('No store found for this seller. Please create a store first or provide a store ID.');
+          }
+          // Access _id from the lean document
+          const firstStore = sellerStores[0] as any;
+          dto.store = firstStore._id?.toString() || firstStore.id?.toString();
+        }
+        // Ensure store is set for sellers (required)
+        if (!dto.store) {
+          throw new BadRequestException('Store ID is required for seller');
+        }
+      }
+
+      // For admins: store is optional - can be provided or will be set to null
+      // (Admins can create products without a specific store)
+      
+      const product = await this.productsService.create(dto, sellerId, adminId);
       const lang = this.getLang(req);
       return formatResponse(
         product,
@@ -69,7 +107,7 @@ export class ProductsController {
       throw new BadRequestException(
         formatResponse(
           null,
-          await this.i18n.t('product.CREATE_FAILED', { lang }),
+          err.message || await this.i18n.t('product.CREATE_FAILED', { lang }),
           'error',
         ),
       );

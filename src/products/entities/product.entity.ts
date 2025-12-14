@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type ProductDocument = Product & Document;
 
@@ -7,93 +7,122 @@ export type ProductDocument = Product & Document;
 export class Product {
   // Basic Information
   @Prop({ required: true })
-  productName: string; // English
+  nameEn: string; // English name
 
   @Prop({ required: true })
-  productNameAr: string; // Arabic
-
-  @Prop({ required: true })
-  productTitle: string; // English
-
-  @Prop({ required: true })
-  productTitleAr: string; // Arabic
+  nameAr: string; // Arabic name
 
   @Prop({ required: true, unique: true })
   permalink: string; // URL-friendly slug
 
-  // Relations
+  // Identity
+  @Prop({ required: true, unique: true })
+  sku: string; // Product SKU
+
+  @Prop({ type: String, default: 'auto-generated' })
+  skuMode: string; // 'manual' or 'auto-generated'
+
+  // Classification
   @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
-  category: Types.ObjectId;
+  category: Types.ObjectId; // Main category
 
   @Prop({ type: Types.ObjectId, ref: 'SubCategory', required: true })
   subcategory: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'SubcategoryChild', required: false })
+  childCategory: Types.ObjectId | null; // Child category
+
   @Prop({ type: Types.ObjectId, ref: 'Brand', required: true })
   brand: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'SellerStore', required: true })
-  store: Types.ObjectId;
+  @Prop({ type: String, default: 'Physical Product' })
+  productType: string; // e.g., 'Physical Product', 'Digital Product', 'Service', etc.
 
-  // Product Identity
-  @Prop({ required: true, unique: true })
-  sku: string; // Can be manual or auto-generated
+  @Prop({ type: Types.ObjectId, ref: 'SellerStore', required: false })
+  store: Types.ObjectId | null;
 
   // Descriptions
   @Prop({ required: true, type: String })
-  productDescription: string; // English
+  descriptionEn: string; // English description
 
   @Prop({ required: true, type: String })
-  productDescriptionAr: string; // Arabic
+  descriptionAr: string; // Arabic description
 
-  // Features
+  // Created By
+  @Prop({ type: String, default: 'seller' })
+  createdBy: string; // 'admin' or 'seller'
+
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  createdById: Types.ObjectId | null; // Admin or Seller ID
+
+  // Key Features
+  @Prop({
+    type: [
+      {
+        titleEn: { type: String },
+        descriptionEn: { type: String },
+        titleAr: { type: String },
+        descriptionAr: { type: String },
+      },
+    ],
+    default: [],
+  })
+  keyFeatures: {
+    titleEn: string;
+    descriptionEn: string;
+    titleAr: string;
+    descriptionAr: string;
+  }[];
+
+  // Media
   @Prop({ type: [String], default: [] })
-  keyFeatures: string[]; // English array
+  featuredImages: string[]; // Featured images array
 
   @Prop({ type: [String], default: [] })
-  keyFeaturesAr: string[]; // Arabic array
+  galleryImages: string[]; // Gallery images array
 
-  // Highlights
-  @Prop({ type: [String], default: [] })
-  productHighlights: string[]; // English array
-
-  @Prop({ type: [String], default: [] })
-  productHighlightsAr: string[]; // Arabic array
-
-  // Delivery
   @Prop({ type: String, default: null })
-  deliveryTime: string | null;
+  productVideo: string | null; // External video URL
 
   // Pricing
   @Prop({ type: Number, required: true })
-  price: number;
+  originalPrice: number; // Original price
 
   @Prop({ type: Number, default: null })
-  salePrice: number | null;
+  salePrice: number | null; // Sale price
 
-  @Prop({ type: Date, default: null })
-  saleStartDate: Date | null;
+  @Prop({
+    type: {
+      discountType: { type: String }, // 'percent' or 'fixed' (renamed from 'type' to avoid Mongoose conflict)
+      value: { type: Number }, // Discount percentage or fixed amount
+      amount: { type: Number }, // Calculated discount amount
+      startDate: { type: Date, default: null },
+      endDate: { type: Date, default: null },
+    },
+  })
+  discount?: {
+    type: string; // 'percent' or 'fixed' (mapped from discountType)
+    value: number;
+    amount: number;
+    startDate: Date | null;
+    endDate: Date | null;
+  } | null;
 
-  @Prop({ type: Date, default: null })
-  saleEndDate: Date | null;
+  // Inventory
+  @Prop({ type: Boolean, default: true })
+  trackStock: boolean; // Whether to track stock
 
-  // Inventory & Weight
   @Prop({ type: Number, default: 0 })
-  stockQuantity: number;
+  stockQuantity: number; // Stock quantity
 
-  @Prop({ type: Number, default: null })
-  weight: number | null; // Weight in kg
+  @Prop({ type: String, default: 'in_stock' })
+  stockStatus: string; // 'in_stock', 'out_of_stock', 'low_stock', etc.
 
-  @Prop({ type: [Number], default: [] })
-  shippingWeight: number[]; // Array of weights in grams
+  @Prop({ type: String, default: 'simple' })
+  inventoryProductType: string; // 'simple', 'variable', etc.
 
-  @Prop({ type: Number, default: null })
-  length: number | null; // Length in cm
-
-  @Prop({ type: Number, default: null })
-  width: number | null; // Width in cm
-
-  @Prop({ type: Number, default: null })
-  height: number | null; // Height in cm
+  @Prop({ type: String, default: null })
+  skuGenerated: string | null; // Auto-generated SKU if applicable
 
   // Variants
   @Prop({ type: [String], default: [] })
@@ -102,20 +131,38 @@ export class Product {
   @Prop({ type: [String], default: [] })
   colors: string[];
 
-  // Specifications
-  @Prop({ type: [{ key: String, value: String }], default: [] })
-  specifications: { key: string; value: string }[];
-
-  // Images
   @Prop({ type: [String], default: [] })
-  productImages: string[]; // Main product images
+  options: string[]; // Additional variant options
 
-  @Prop({ type: [{ variant: String, images: [String] }], default: [] })
-  productImageVariants: { variant: string; images: string[] }[];
+  // Shipping
+  @Prop({ type: MongooseSchema.Types.Mixed, default: null })
+  shipping: any; // Shipping information object
 
-  // Related Products
+  // Specifications
+  @Prop({
+    type: [
+      {
+        keyEn: { type: String },
+        valueEn: { type: String },
+        keyAr: { type: String },
+        valueAr: { type: String },
+      },
+    ],
+    default: [],
+  })
+  specifications: {
+    keyEn: string;
+    valueEn: string;
+    keyAr: string;
+    valueAr: string;
+  }[];
+
+  // Relations
   @Prop({ type: [Types.ObjectId], ref: 'Product', default: [] })
-  relatedProducts: Types.ObjectId[]; // Cross-selling products
+  relatedProducts: Types.ObjectId[]; // Related products
+
+  @Prop({ type: [Types.ObjectId], ref: 'Product', default: [] })
+  crossSellingProducts: Types.ObjectId[]; // Cross-selling products
 
   // Status
   @Prop({ type: Boolean, default: true })
