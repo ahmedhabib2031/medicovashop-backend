@@ -150,7 +150,7 @@ export class SellerStoreController {
 
     // If seller, only show their stores
     if (req.user.role === UserRole.SELLER) {
-      query.sellerId = req.user.id;
+      query.sellerId = req.user.id || req.user.userId;
     }
 
     const result = await this.sellerStoreService.findAll(query);
@@ -179,10 +179,20 @@ export class SellerStoreController {
   })
   @ApiResponse({ status: 200, description: 'Stores fetched successfully' })
   async getMyStore(@Req() req) {
-    const stores = await this.sellerStoreService.findBySellerId(req.user.id);
+    const store = await this.sellerStoreService.findBySellerId(req.user.id);
+    if (!store) {
+      const lang = this.getLang(req);
+      throw new BadRequestException(
+        formatResponse(
+          null,
+          await this.i18n.t('sellerStore.STORE_NOT_FOUND', { lang }),
+          'error',
+        ),
+      );
+    }
     const lang = this.getLang(req);
     return formatResponse(
-      stores,
+      store,
       await this.i18n.t('sellerStore.FETCH_SUCCESS', { lang }),
     );
   }

@@ -46,9 +46,9 @@ export class SellerStoreService {
 
     const filter: any = {};
 
-    // If sellerId is provided, filter by it
+    // If sellerId is provided, filter by it (convert to ObjectId)
     if (query.sellerId) {
-      filter.sellerId = query.sellerId;
+      filter.sellerId = new Types.ObjectId(query.sellerId);
     }
 
     // Search filter
@@ -86,7 +86,7 @@ export class SellerStoreService {
 
   async findBySellerId(sellerId: string): Promise<SellerStore[]> {
     const stores = await this.sellerStoreModel
-      .find({ sellerId: new Types.ObjectId(sellerId) })
+      .find({ sellerId })
       .populate('sellerId', 'firstName lastName brandName email')
       .sort({ createdAt: -1 })
       .lean()

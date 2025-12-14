@@ -1,0 +1,46 @@
+{
+  "nameEn": "Premium Cotton T-Shirt",
+  "nameAr": "قميص قطني فاخر",
+  "permalink": "premium-cotton-t-shirt",
+  "category": "507f1f77bcf86cd799439011",
+  "subcategory": "507f1f77bcf86cd799439012",
+  "childCategory": "507f1f77bcf86cd799439013",
+  "brand": "507f1f77bcf86cd799439014",
+  "productType": "Physical Product",
+  "sku": "PROD-001",
+  "descriptionEn": "High quality cotton t-shirt with comfortable fit. Perfect for everyday wear. Made from 100% organic cotton.",
+  "descriptionAr": "قميص قطني عالي الجودة مع قصة مريحة. مثالي للارتداء اليومي. مصنوع من 100% قطن عضوي.",
+  "keyFeatures": [
+    {
+      "title": "Premium Quality",
+      "description": "Made with high-quality materials and superior craftsmanship",
+      "titleAr": "جودة فاخرة",
+      "descriptionAr": "مصنوع من مواد عالية الجودة وحرفية فائقة"
+    },
+    {
+      "title": "Eco Friendly",
+      "description": "Environmentally sustainable product made from organic materials",
+      "titleAr": "صديق للبيئة",
+      "descriptionAr": "منتج مستدام بيئياً مصنوع من مواد عضوية"
+    },
+    {
+      "title": "Comfortable Fit",
+      "description": "Designed for maximum comfort and ease of movement",
+      "titleAr": "قصة مريحة",
+      "descriptionAr": "مصمم للراحة القصوى وسهولة الحركة"
+    }
+  ],
+  "featuredImages": [
+    "https://example.com/featured1.jpg",
+    "https://example.com/featured2.jpg"
+  ],
+  "galleryImages": [
+    "https://example.com/gallery1.jpg",
+    "https://example.com/gallery2.jpg",
+    "https://example.com/gallery3.jpg",
+    "https://example.com/gallery4.jpg"
+  ],
+  "productVideo": "https://www.youtube.com/watch?v=example123",
+  "active": true,
+}
+
