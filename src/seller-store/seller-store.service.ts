@@ -5,7 +5,7 @@ import { SellerStore, SellerStoreDocument } from './entities/seller-store.entity
 import { CreateSellerStoreDto } from './dto/create-seller-store.dto';
 import { UpdateSellerStoreDto } from './dto/update-seller-store.dto';
 import { UpdateSellerStoreStatusDto } from './dto/update-seller-store-status.dto';
-
+import { Types } from 'mongoose';
 @Injectable()
 export class SellerStoreService {
   constructor(
@@ -19,15 +19,19 @@ export class SellerStoreService {
       throw new BadRequestException('Seller ID is required');
     }
 
-    // Check if seller already has a store
-    const existingStore = await this.sellerStoreModel.findOne({
-      sellerId: dto.sellerId,
-    });
-    if (existingStore) {
-      throw new BadRequestException('SELLER_STORE_EXISTS');
-    }
+    // Sellers can have multiple stores, so no need to check for existing stores
 
-    return await this.sellerStoreModel.create(dto);
+    try {
+      return await this.sellerStoreModel.create(dto);
+    } catch (error) {
+      // Handle validation errors or other MongoDB errors
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map((e: any) => e.message);
+        throw new BadRequestException(messages.join(', '));
+      }
+      // Re-throw the error so controller can handle it
+      throw error;
+    }
   }
 
   async findAll(query: {
@@ -80,12 +84,14 @@ export class SellerStoreService {
     return store as SellerStore;
   }
 
-  async findBySellerId(sellerId: string): Promise<SellerStore | null> {
-    const store = await this.sellerStoreModel
-      .findOne({ sellerId })
+  async findBySellerId(sellerId: string): Promise<SellerStore[]> {
+    const stores = await this.sellerStoreModel
+      .find({ sellerId: new Types.ObjectId(sellerId) })
       .populate('sellerId', 'firstName lastName brandName email')
-      .lean();
-    return store as SellerStore | null;
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+    return stores as unknown as SellerStore[];
   }
 
   async update(id: string, dto: UpdateSellerStoreDto): Promise<SellerStore> {

@@ -57,11 +57,18 @@ export class SellerStoreController {
   async create(@Body() dto: CreateSellerStoreDto, @Req() req) {
     // If seller is creating, automatically set sellerId from token
     if (req.user.role === UserRole.SELLER) {
-      dto.sellerId = req.user.id;
+      dto.sellerId = req.user.id || req.user.userId;
     } else if (req.user.role === UserRole.ADMIN) {
       // Admin must provide sellerId
       if (!dto.sellerId) {
-        throw new BadRequestException('Seller ID is required');
+        const lang = this.getLang(req);
+        throw new BadRequestException(
+          formatResponse(
+            null,
+            await this.i18n.t('sellerStore.SELLER_ID_REQUIRED', { lang }),
+            'error',
+          ),
+        );
       }
     }
 
@@ -74,10 +81,46 @@ export class SellerStoreController {
       );
     } catch (err) {
       const lang = this.getLang(req);
+      
+      // Get the error message
+      let errorMessage = err?.message || '';
+      
+      // If it's a BadRequestException, try to extract message from response
+      if (err instanceof BadRequestException) {
+        const errorResponse = err.getResponse();
+        if (typeof errorResponse === 'string') {
+          errorMessage = errorResponse;
+        } else if (errorResponse && typeof errorResponse === 'object') {
+          errorMessage = (errorResponse as any).message || errorMessage;
+        }
+      }
+      
+      // If it's the store exists error, return a specific message
+      if (errorMessage === 'SELLER_STORE_EXISTS' || 
+          (typeof errorMessage === 'string' && errorMessage.includes('SELLER_STORE_EXISTS'))) {
+        const translatedMessage = await this.i18n.t('sellerStore.SELLER_STORE_EXISTS', { lang });
+        // Fallback to English if translation returns the key
+        const message = translatedMessage === 'sellerStore.SELLER_STORE_EXISTS' 
+          ? 'Store already exists for this seller' 
+          : translatedMessage;
+        throw new BadRequestException(
+          formatResponse(
+            null,
+            message,
+            'error',
+          ),
+        );
+      }
+      
+      // Return the error message or generic failure message
+      const translatedMessage = errorMessage || await this.i18n.t('sellerStore.CREATE_FAILED', { lang });
+      const message = translatedMessage === 'sellerStore.CREATE_FAILED'
+        ? 'Failed to create seller store'
+        : translatedMessage;
       throw new BadRequestException(
         formatResponse(
           null,
-          await this.i18n.t('sellerStore.CREATE_FAILED', { lang }),
+          message,
           'error',
         ),
       );
@@ -131,26 +174,15 @@ export class SellerStoreController {
   @Get('me')
   @Roles(UserRole.SELLER)
   @ApiOperation({
-    summary: 'Get seller own store',
-    description: 'Get the current seller\'s store (Seller only)',
+    summary: 'Get seller own stores',
+    description: 'Get all stores for the current seller (Seller only)',
   })
-  @ApiResponse({ status: 200, description: 'Store fetched successfully' })
-  @ApiResponse({ status: 404, description: 'Store not found' })
+  @ApiResponse({ status: 200, description: 'Stores fetched successfully' })
   async getMyStore(@Req() req) {
-    const store = await this.sellerStoreService.findBySellerId(req.user.id);
-    if (!store) {
-      const lang = this.getLang(req);
-      throw new BadRequestException(
-        formatResponse(
-          null,
-          await this.i18n.t('sellerStore.STORE_NOT_FOUND', { lang }),
-          'error',
-        ),
-      );
-    }
+    const stores = await this.sellerStoreService.findBySellerId(req.user.id);
     const lang = this.getLang(req);
     return formatResponse(
-      store,
+      stores,
       await this.i18n.t('sellerStore.FETCH_SUCCESS', { lang }),
     );
   }

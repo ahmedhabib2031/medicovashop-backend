@@ -211,7 +211,7 @@ export class UsersController {
   @ApiOperation({
     summary: 'Update seller profile',
     description:
-      'Update seller profile information including brand name, contact email, phone, location, and profile image (Seller only)',
+      'Update seller profile information including first name, last name, brand name, contact email, phone, location, and profile image (Seller only)',
   })
   @ApiResponse({
     status: 200,
@@ -223,6 +223,8 @@ export class UsersController {
 
     // Map sellerContactEmail to SellerContactEmail (entity field name)
     const updateData: any = {};
+    if (dto.firstName !== undefined) updateData.firstName = dto.firstName;
+    if (dto.lastName !== undefined) updateData.lastName = dto.lastName;
     if (dto.brandName !== undefined) updateData.brandName = dto.brandName;
     if (dto.sellerContactEmail !== undefined)
       updateData.SellerContactEmail = dto.sellerContactEmail;
