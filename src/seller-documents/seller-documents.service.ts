@@ -26,15 +26,27 @@ export class SellerDocumentsService {
   ): Promise<SellerDocument> {
     // Check if seller already has a document
     const existingDoc = await this.sellerDocumentModel.findOne({ sellerId });
-    if (existingDoc) {
-      throw new BadRequestException('SELLER_DOCUMENT_EXISTS');
+
+    // If no document exists, create a new pending one
+    if (!existingDoc) {
+      return await this.sellerDocumentModel.create({
+        sellerId,
+        ...dto,
+        status: DocumentStatus.PENDING,
+      });
     }
 
-    return await this.sellerDocumentModel.create({
-      sellerId,
-      ...dto,
-      status: DocumentStatus.PENDING,
-    });
+    // If document exists and is still pending, update it in the same endpoint
+    if (existingDoc.status === DocumentStatus.PENDING) {
+      existingDoc.idFront = dto.idFront;
+      existingDoc.idBack = dto.idBack;
+      existingDoc.status = DocumentStatus.PENDING; // keep/reset to pending
+      await existingDoc.save();
+      return existingDoc.toObject() as SellerDocument;
+    }
+
+    // If document exists and is not pending, reject update through this endpoint
+    throw new BadRequestException('SELLER_DOCUMENT_ALREADY_REVIEWED');
   }
 
   async update(
