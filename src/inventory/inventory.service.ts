@@ -117,7 +117,10 @@ export class InventoryService {
     const [data, total] = await Promise.all([
       this.inventoryModel
         .find(query)
-        .populate('productId', 'productName productNameAr sku')
+        .populate(
+          'productId',
+          'nameEn nameAr sku featuredImages galleryImages',
+        )
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -152,7 +155,7 @@ export class InventoryService {
     // Populate productId after validation
     await inventory.populate(
       'productId',
-      'productName productNameAr sku sizes colors stockQuantity',
+      'nameEn nameAr sku sizes colors stockQuantity featuredImages galleryImages',
     );
 
     return inventory;
@@ -179,7 +182,7 @@ export class InventoryService {
     // Populate productId after validation
     await inventory.populate(
       'productId',
-      'productName productNameAr sku sizes colors stockQuantity',
+      'nameEn nameAr sku sizes colors stockQuantity featuredImages galleryImages',
     );
 
     return inventory;
