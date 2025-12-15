@@ -26,8 +26,6 @@ import { UserRole } from 'src/users/entities/user.entity';
 import { formatResponse } from 'src/common/utils/response.util';
 
 @Controller('subcategory-child')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
 export class SubcategoryChildController {
   constructor(
     private readonly subcategoryChildService: SubcategoryChildService,
@@ -39,6 +37,8 @@ export class SubcategoryChildController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async create(@Body() dto: CreateSubcategoryChildDto, @Req() req) {
     try {
       const child = await this.subcategoryChildService.create(dto);
@@ -98,6 +98,8 @@ export class SubcategoryChildController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async update(@Param('id') id: string, @Body() dto: UpdateSubcategoryChildDto, @Req() req) {
     const child = await this.subcategoryChildService.update(id, dto);
     const lang = this.getLang(req);
@@ -105,6 +107,8 @@ export class SubcategoryChildController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async remove(@Param('id') id: string, @Req() req) {
     await this.subcategoryChildService.remove(id);
     const lang = this.getLang(req);
@@ -112,6 +116,8 @@ export class SubcategoryChildController {
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateSubcategoryChildStatusDto,
