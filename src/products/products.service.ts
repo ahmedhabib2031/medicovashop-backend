@@ -4,8 +4,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
+import { Order, OrderDocument } from '../orders/entities/order.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateProductStatusDto } from './dto/update-product-status.dto';
@@ -14,6 +15,7 @@ import { UpdateProductStatusDto } from './dto/update-product-status.dto';
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
   ) {}
 
 
@@ -205,7 +207,108 @@ export class ProductsService {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
     }
 
-    return product as Product;
+    // Orders that include this product
+    const productObjectId = new Types.ObjectId(id);
+    const orders = await this.orderModel
+      .find({ 'items.productId': productObjectId })
+      .populate('customerId', 'firstName lastName email phone')
+      .select(
+        'orderNumber status paymentStatus paymentMethod total createdAt items customerId',
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const productOrders = orders.map((o: any) => {
+      const matchedItems = (o.items || []).filter(
+        (it: any) => it.productId?.toString?.() === id,
+      );
+      return {
+        _id: o._id,
+        orderNumber: o.orderNumber,
+        status: o.status,
+        paymentStatus: o.paymentStatus,
+        createdAt: o.createdAt,
+        total: o.total,
+        customer: o.customerId,
+        items: matchedItems,
+      };
+    });
+
+    // Top customers who bought this product (by total quantity)
+    const topCustomers = await this.orderModel
+      .aggregate([
+        { $match: { 'items.productId': productObjectId } },
+        { $unwind: '$items' },
+        { $match: { 'items.productId': productObjectId } },
+        {
+          $group: {
+            _id: '$customerId',
+            ordersCount: { $addToSet: '$_id' },
+            totalQuantity: { $sum: '$items.quantity' },
+            totalSpent: { $sum: '$items.subtotal' },
+            lastPurchaseAt: { $max: '$createdAt' },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            ordersCount: { $size: '$ordersCount' },
+            totalQuantity: 1,
+            totalSpent: 1,
+            lastPurchaseAt: 1,
+          },
+        },
+        { $sort: { totalQuantity: -1, totalSpent: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'customer',
+          },
+        },
+        {
+          $addFields: {
+            customer: { $arrayElemAt: ['$customer', 0] },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            customerId: '$_id',
+            ordersCount: 1,
+            totalQuantity: 1,
+            totalSpent: 1,
+            lastPurchaseAt: 1,
+            customer: {
+              _id: '$customer._id',
+              firstName: '$customer.firstName',
+              lastName: '$customer.lastName',
+              email: '$customer.email',
+              phone: '$customer.phone',
+            },
+          },
+        },
+      ])
+      .exec();
+
+    // Dummy transactions (for UI): paymentType/amount/createdAt
+    const transactions = productOrders.map((o: any) => ({
+      orderId: o._id,
+      transactionId: `DUMMY-${o.orderNumber}`,
+      paymentType: 'dummy_card',
+      amount: o.total ?? 0,
+      createdAt: o.createdAt,
+      isDummy: true,
+    }));
+
+    return {
+      ...(product as any),
+      orders: productOrders,
+      topCustomers,
+      transactions,
+    } as any;
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<Product> {
