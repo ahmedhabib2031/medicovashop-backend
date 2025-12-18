@@ -13,6 +13,7 @@ import { Product, ProductDocument } from '../products/entities/product.entity';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
+import { UpdateInventoryVariantDto } from './dto/update-inventory-variant.dto';
 
 @Injectable()
 export class InventoryService {
@@ -266,6 +267,77 @@ export class InventoryService {
 
     inventory.active = dto.active;
     return inventory.save();
+  }
+
+  async updateVariant(
+    inventoryId: string,
+    dto: UpdateInventoryVariantDto,
+    sellerId?: string,
+  ): Promise<ProductInventory> {
+    const inventory = await this.inventoryModel.findById(inventoryId);
+    if (!inventory) {
+      throw new NotFoundException('INVENTORY_NOT_FOUND');
+    }
+
+    // Check if seller owns the product
+    const product = await this.productModel.findById(inventory.productId);
+    if (!product) {
+      throw new NotFoundException('PRODUCT_NOT_FOUND');
+    }
+
+    if (sellerId && product.sellerId?.toString() !== sellerId) {
+      throw new BadRequestException('INVENTORY_NOT_OWNED_BY_SELLER');
+    }
+
+    const targetColors = [...dto.colors].sort().join(',');
+    const variant = inventory.variants.find(
+      (v) => v.size === dto.size && [...v.colors].sort().join(',') === targetColors,
+    );
+
+    if (!variant) {
+      throw new NotFoundException('VARIANT_NOT_FOUND');
+    }
+
+    // Validate variant still matches product constraints
+    this.validateVariants(
+      [
+        {
+          size: dto.size,
+          colors: dto.colors,
+          quantity: dto.quantity ?? variant.quantity,
+        },
+      ],
+      product,
+    );
+
+    // Update fields
+    if (dto.quantity !== undefined) {
+      variant.quantity = dto.quantity;
+    }
+    if (dto.image !== undefined) {
+      variant.image = dto.image || null;
+    }
+    if (dto.attributes !== undefined) {
+      variant.attributes = dto.attributes;
+    }
+
+    // Recalculate total quantity
+    inventory.totalQuantity = inventory.variants.reduce(
+      (sum, v) => sum + (v.quantity || 0),
+      0,
+    );
+
+    // Ensure inventory does not exceed product stock
+    if (inventory.totalQuantity > product.stockQuantity) {
+      throw new BadRequestException('INVENTORY_EXCEEDS_PRODUCT_STOCK');
+    }
+
+    const saved = await inventory.save();
+    await saved.populate(
+      'productId',
+      'nameEn nameAr sku sizes colors stockQuantity featuredImages galleryImages',
+    );
+    return saved;
   }
 
   async remove(id: string, sellerId?: string): Promise<void> {

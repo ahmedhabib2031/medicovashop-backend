@@ -16,6 +16,7 @@ import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
+import { UpdateInventoryVariantDto } from './dto/update-inventory-variant.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -190,6 +191,34 @@ export class InventoryController {
     return formatResponse(
       inventory,
       await this.i18n.t('inventory.INVENTORY_STATUS_UPDATED', { lang }),
+    );
+  }
+
+  @Patch(':id/variant')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({ summary: 'Update a single inventory variant' })
+  @ApiParam({ name: 'id', description: 'Inventory ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory variant updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Inventory or variant not found' })
+  async updateVariant(
+    @Param('id') id: string,
+    @Body() dto: UpdateInventoryVariantDto,
+    @Request() req,
+  ) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const inventory = await this.inventoryService.updateVariant(
+      id,
+      dto,
+      sellerId,
+    );
+    const lang = this.getLang(req);
+    return formatResponse(
+      inventory,
+      await this.i18n.t('inventory.INVENTORY_UPDATED', { lang }),
     );
   }
 

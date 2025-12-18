@@ -9,6 +9,7 @@ import {
   ArrayMinSize,
   IsOptional,
   IsObject,
+  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -41,6 +42,15 @@ export class InventoryVariantDto {
   @Min(0)
   @IsNotEmpty()
   quantity: number;
+
+  @ApiProperty({
+    example: 'https://example.com/variant-m-red-black.jpg',
+    description: 'Image URL for this specific variant combination',
+    required: false,
+  })
+  @IsOptional()
+  @IsUrl({}, { message: 'Please provide a valid URL' })
+  image?: string;
 
   @ApiProperty({
     example: {
