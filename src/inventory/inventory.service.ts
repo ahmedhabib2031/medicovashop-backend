@@ -118,10 +118,7 @@ export class InventoryService {
     const [data, total] = await Promise.all([
       this.inventoryModel
         .find(query)
-        .populate(
-          'productId',
-          'nameEn nameAr sku featuredImages galleryImages',
-        )
+        .populate('productId', 'nameEn nameAr sku featuredImages galleryImages')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -208,9 +205,8 @@ export class InventoryService {
     }
 
     // If updating productId, check if new product exists
-    let product = await this.productModel.findById(
-      dto.productId || inventory.productId,
-    );
+    const targetProductId = dto.productId || inventory.productId;
+    const product = await this.productModel.findById(targetProductId);
     if (!product) {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
     }
@@ -291,7 +287,8 @@ export class InventoryService {
 
     const targetColors = [...dto.colors].sort().join(',');
     const variant = inventory.variants.find(
-      (v) => v.size === dto.size && [...v.colors].sort().join(',') === targetColors,
+      (v) =>
+        v.size === dto.size && [...v.colors].sort().join(',') === targetColors,
     );
 
     if (!variant) {
@@ -331,6 +328,125 @@ export class InventoryService {
     if (inventory.totalQuantity > product.stockQuantity) {
       throw new BadRequestException('INVENTORY_EXCEEDS_PRODUCT_STOCK');
     }
+
+    const saved = await inventory.save();
+    await saved.populate(
+      'productId',
+      'nameEn nameAr sku sizes colors stockQuantity featuredImages galleryImages',
+    );
+    return saved;
+  }
+
+  async updateVariantById(
+    inventoryId: string,
+    variantId: string,
+    dto: UpdateInventoryVariantDto,
+    sellerId?: string,
+  ): Promise<ProductInventory> {
+    const inventory = await this.inventoryModel.findById(inventoryId);
+    if (!inventory) {
+      throw new NotFoundException('INVENTORY_NOT_FOUND');
+    }
+
+    const product = await this.productModel.findById(inventory.productId);
+    if (!product) {
+      throw new NotFoundException('PRODUCT_NOT_FOUND');
+    }
+
+    if (sellerId && product.sellerId?.toString() !== sellerId) {
+      throw new BadRequestException('INVENTORY_NOT_OWNED_BY_SELLER');
+    }
+
+    const variant = inventory.variants.find(
+      (v: any) => v?._id?.toString?.() === variantId,
+    );
+    if (!variant) {
+      throw new NotFoundException('VARIANT_NOT_FOUND');
+    }
+
+    // If caller sends size/colors, ensure they match this variant (prevent accidental edits)
+    if (dto.size && dto.size !== variant.size) {
+      throw new BadRequestException('VARIANT_SIZE_MISMATCH');
+    }
+    if (dto.colors && dto.colors.length > 0) {
+      const incoming = [...dto.colors].sort().join(',');
+      const existing = [...(variant.colors || [])].sort().join(',');
+      if (incoming !== existing) {
+        throw new BadRequestException('VARIANT_COLORS_MISMATCH');
+      }
+    }
+
+    // Validate against product constraints (using current size/colors)
+    this.validateVariants(
+      [
+        {
+          size: variant.size,
+          colors: variant.colors,
+          quantity: dto.quantity ?? variant.quantity,
+        },
+      ],
+      product,
+    );
+
+    if (dto.quantity !== undefined) {
+      variant.quantity = dto.quantity;
+    }
+    if (dto.image !== undefined) {
+      variant.image = dto.image || null;
+    }
+    if (dto.attributes !== undefined) {
+      variant.attributes = dto.attributes;
+    }
+
+    inventory.totalQuantity = inventory.variants.reduce(
+      (sum, v: any) => sum + (v.quantity || 0),
+      0,
+    );
+
+    if (inventory.totalQuantity > product.stockQuantity) {
+      throw new BadRequestException('INVENTORY_EXCEEDS_PRODUCT_STOCK');
+    }
+
+    const saved = await inventory.save();
+    await saved.populate(
+      'productId',
+      'nameEn nameAr sku sizes colors stockQuantity featuredImages galleryImages',
+    );
+    return saved;
+  }
+
+  async deleteVariantById(
+    inventoryId: string,
+    variantId: string,
+    sellerId?: string,
+  ): Promise<ProductInventory> {
+    const inventory = await this.inventoryModel.findById(inventoryId);
+    if (!inventory) {
+      throw new NotFoundException('INVENTORY_NOT_FOUND');
+    }
+
+    const product = await this.productModel.findById(inventory.productId);
+    if (!product) {
+      throw new NotFoundException('PRODUCT_NOT_FOUND');
+    }
+
+    if (sellerId && product.sellerId?.toString() !== sellerId) {
+      throw new BadRequestException('INVENTORY_NOT_OWNED_BY_SELLER');
+    }
+
+    const beforeCount = inventory.variants.length;
+    inventory.variants = (inventory.variants as any).filter(
+      (v: any) => v?._id?.toString?.() !== variantId,
+    );
+
+    if (inventory.variants.length === beforeCount) {
+      throw new NotFoundException('VARIANT_NOT_FOUND');
+    }
+
+    inventory.totalQuantity = inventory.variants.reduce(
+      (sum, v: any) => sum + (v.quantity || 0),
+      0,
+    );
 
     const saved = await inventory.save();
     await saved.populate(
@@ -380,4 +496,3 @@ export class InventoryService {
     }
   }
 }
-

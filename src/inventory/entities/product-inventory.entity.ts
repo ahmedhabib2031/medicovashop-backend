@@ -3,7 +3,7 @@ import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type ProductInventoryDocument = ProductInventory & Document;
 
-@Schema({ timestamps: true, _id: false })
+@Schema({ timestamps: true })
 export class ProductInventoryVariant {
   @Prop({ required: true })
   size: string;
@@ -21,23 +21,16 @@ export class ProductInventoryVariant {
   attributes: Record<string, any>; // Dynamic attributes like price, weight, etc.
 }
 
+export const ProductInventoryVariantSchema = SchemaFactory.createForClass(
+  ProductInventoryVariant,
+);
+
 @Schema({ timestamps: true })
 export class ProductInventory {
   @Prop({ type: Types.ObjectId, ref: 'Product', required: true, unique: true })
   productId: Types.ObjectId;
 
-  @Prop({
-    type: [
-      {
-        size: String,
-        colors: [String],
-        quantity: { type: Number, min: 0 },
-        image: { type: String, default: null },
-        attributes: { type: MongooseSchema.Types.Mixed, default: {} },
-      },
-    ],
-    default: [],
-  })
+  @Prop({ type: [ProductInventoryVariantSchema], default: [] })
   variants: ProductInventoryVariant[];
 
   @Prop({ type: Number, default: 0 })
