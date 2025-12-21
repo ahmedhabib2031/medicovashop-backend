@@ -156,6 +156,13 @@ export class InventoryController {
     description: 'Minimum rating filter (0-5)',
     example: 4,
   })
+  @ApiQuery({
+    name: 'productStatus',
+    required: false,
+    type: String,
+    enum: ['active', 'inactive'],
+    description: 'Filter by product status (active or inactive)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Inventory items retrieved successfully',
@@ -176,6 +183,7 @@ export class InventoryController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('minRating') minRating?: string,
+    @Query('productStatus') productStatus?: string,
     @Request() req?,
   ) {
     const sellerId =
@@ -197,6 +205,7 @@ export class InventoryController {
       minPrice ? parseFloat(minPrice) : undefined,
       maxPrice ? parseFloat(maxPrice) : undefined,
       minRating ? parseFloat(minRating) : undefined,
+      productStatus,
     );
     const lang = this.getLang(req);
     return formatResponse(
@@ -238,6 +247,7 @@ export class InventoryController {
         minQuantity: filterDto.minQuantity,
         maxQuantity: filterDto.maxQuantity,
         active: filterDto.active,
+        productStatus: filterDto.productStatus,
         sortBy,
         sortOrder,
       },
@@ -289,6 +299,7 @@ export class InventoryController {
         minQuantity: filterDto.minQuantity,
         maxQuantity: filterDto.maxQuantity,
         active: filterDto.active,
+        productStatus: filterDto.productStatus,
         storeId,
         sortBy,
         sortOrder,

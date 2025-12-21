@@ -96,6 +96,7 @@ export class InventoryService {
     minPrice?: number,
     maxPrice?: number,
     minRating?: number,
+    productStatus?: string,
   ) {
     const skip = (page - 1) * limit;
     const query: any = {};
@@ -125,6 +126,11 @@ export class InventoryService {
     // Filter by QA status (if qaStatus field exists on Product)
     if (qaStatus) {
       productFilter.qaStatus = qaStatus;
+    }
+
+    // Filter by product status (active/inactive)
+    if (productStatus) {
+      productFilter.active = productStatus === 'active';
     }
 
     // Filter by price range
@@ -315,6 +321,7 @@ export class InventoryService {
       minQuantity?: number;
       maxQuantity?: number;
       active?: boolean;
+      productStatus?: string;
       storeId?: string;
       sortBy?: string;
       sortOrder?: 'asc' | 'desc';
@@ -411,6 +418,49 @@ export class InventoryService {
     // Active filter
     if (filters.active !== undefined) {
       query.active = filters.active;
+    }
+
+    // Product status filter (applied to product filter)
+    const productFilter: any = {};
+    if (filters.productStatus) {
+      productFilter.active = filters.productStatus === 'active';
+    }
+
+    // Apply product filter if needed
+    if (Object.keys(productFilter).length > 0) {
+      const filteredProducts = await this.productModel
+        .find(productFilter)
+        .select('_id');
+      const filteredProductIds = filteredProducts.map((p) => p._id);
+
+      if (query.productId) {
+        if (query.productId.$in) {
+          query.productId.$in = query.productId.$in.filter((id: any) =>
+            filteredProductIds.some(
+              (fpId) => fpId.toString() === id.toString(),
+            ),
+          );
+        } else {
+          if (
+            filteredProductIds.some(
+              (fpId) => fpId.toString() === query.productId.toString(),
+            )
+          ) {
+            // Keep the productId
+          } else {
+            // Product doesn't match filter, return empty
+            return {
+              data: [],
+              total: 0,
+              page,
+              limit,
+              totalPages: 0,
+            };
+          }
+        }
+      } else {
+        query.productId = { $in: filteredProductIds };
+      }
     }
 
     // Build quantity filter combining status and quantity range

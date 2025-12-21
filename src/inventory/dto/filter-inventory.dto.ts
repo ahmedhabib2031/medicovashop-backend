@@ -104,5 +104,15 @@ export class FilterInventoryDto {
   @Type(() => Boolean)
   @IsBoolean()
   active?: boolean;
+
+  @ApiProperty({
+    example: 'active',
+    required: false,
+    enum: ['active', 'inactive'],
+    description: 'Filter by product status (active or inactive)',
+  })
+  @IsOptional()
+  @IsEnum(['active', 'inactive'])
+  productStatus?: string;
 }
 
