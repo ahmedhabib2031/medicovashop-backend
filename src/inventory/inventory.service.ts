@@ -621,6 +621,9 @@ export class InventoryService {
       }
     }
 
+    // Delete the inventory document
+    // Note: All nested variants are automatically deleted when the inventory document is deleted
+    // MongoDB/Mongoose automatically removes all subdocuments (variants array) when the parent document is deleted
     await this.inventoryModel.findByIdAndDelete(id);
   }
 
@@ -666,6 +669,9 @@ export class InventoryService {
           }
         }
 
+        // Delete the inventory document
+        // Note: All nested variants are automatically deleted when the inventory document is deleted
+        // MongoDB/Mongoose automatically removes all subdocuments (variants array) when the parent document is deleted
         await this.inventoryModel.findByIdAndDelete(id);
         deletedCount++;
       } catch (error) {
