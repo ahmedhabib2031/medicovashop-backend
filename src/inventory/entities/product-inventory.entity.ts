@@ -14,6 +14,9 @@ export class ProductInventoryVariant {
   @Prop({ type: Number, required: true, min: 0 })
   quantity: number;
 
+  @Prop({ type: String, default: null })
+  image: string | null; // Variant image URL
+
   @Prop({ type: MongooseSchema.Types.Mixed, default: {} })
   attributes: Record<string, any>; // Dynamic attributes like price, weight, etc.
 }
@@ -29,6 +32,7 @@ export class ProductInventory {
         size: String,
         colors: [String],
         quantity: { type: Number, min: 0 },
+        image: { type: String, default: null },
         attributes: { type: MongooseSchema.Types.Mixed, default: {} },
       },
     ],

@@ -43,6 +43,15 @@ export class UpdateInventoryVariantDto {
   quantity?: number;
 
   @ApiProperty({
+    example: 'https://example.com/images/variant-red-m.jpg',
+    description: 'Variant image URL',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @ApiProperty({
     example: {
       price: 99.99,
       salePrice: 79.99,

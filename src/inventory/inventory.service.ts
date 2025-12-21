@@ -686,6 +686,7 @@ export class InventoryService {
       size?: string;
       colors?: string[];
       quantity?: number;
+      image?: string;
       attributes?: Record<string, any>;
     },
     sellerId?: string,
@@ -720,6 +721,8 @@ export class InventoryService {
       size: variantData.size ?? variant.size,
       colors: variantData.colors ?? variant.colors,
       quantity: variantData.quantity ?? variant.quantity,
+      image:
+        variantData.image !== undefined ? variantData.image : variant.image,
       attributes: variantData.attributes ?? variant.attributes,
     };
 
