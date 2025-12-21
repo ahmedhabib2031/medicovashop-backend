@@ -282,6 +282,58 @@ export class InventoryService {
     await this.inventoryModel.findByIdAndDelete(id);
   }
 
+  async bulkRemove(ids: string[], sellerId?: string): Promise<{
+    deletedCount: number;
+    failedIds: string[];
+  }> {
+    if (!ids || ids.length === 0) {
+      throw new BadRequestException('INVENTORY_IDS_REQUIRED');
+    }
+
+    const failedIds: string[] = [];
+    let deletedCount = 0;
+
+    // If seller, get all their product IDs first
+    let sellerProductIds: string[] = [];
+    if (sellerId) {
+      const sellerProducts = await this.productModel
+        .find({ sellerId })
+        .select('_id');
+      sellerProductIds = sellerProducts.map((p) => p._id.toString());
+    }
+
+    // Process each inventory deletion
+    for (const id of ids) {
+      try {
+        const inventory = await this.inventoryModel.findById(id);
+        
+        if (!inventory) {
+          failedIds.push(id);
+          continue;
+        }
+
+        // Check if seller owns the product
+        if (sellerId) {
+          const productId = inventory.productId.toString();
+          if (!sellerProductIds.includes(productId)) {
+            failedIds.push(id);
+            continue;
+          }
+        }
+
+        await this.inventoryModel.findByIdAndDelete(id);
+        deletedCount++;
+      } catch (error) {
+        failedIds.push(id);
+      }
+    }
+
+    return {
+      deletedCount,
+      failedIds,
+    };
+  }
+
   private validateVariants(
     variants: { size: string; colors: string[]; quantity: number }[],
     product: ProductDocument,

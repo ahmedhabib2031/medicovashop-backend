@@ -16,6 +16,7 @@ import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
+import { BulkDeleteInventoryDto } from './dto/bulk-delete-inventory.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -60,7 +61,8 @@ export class InventoryController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async create(@Body() dto: CreateInventoryDto, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.create(dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -87,7 +89,8 @@ export class InventoryController {
     @Query('productId') productId?: string,
     @Request() req?,
   ) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const result = await this.inventoryService.findAll(
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 10,
@@ -112,7 +115,8 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async findByProductId(@Param('productId') productId: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.findByProductId(
       productId,
       sellerId,
@@ -134,7 +138,8 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async findOne(@Param('id') id: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.findOne(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -157,7 +162,8 @@ export class InventoryController {
     @Body() dto: UpdateInventoryDto,
     @Request() req,
   ) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.update(id, dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -180,7 +186,8 @@ export class InventoryController {
     @Body() dto: UpdateInventoryStatusDto,
     @Request() req,
   ) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.updateStatus(
       id,
       dto,
@@ -190,6 +197,43 @@ export class InventoryController {
     return formatResponse(
       inventory,
       await this.i18n.t('inventory.INVENTORY_STATUS_UPDATED', { lang }),
+    );
+  }
+
+  @Delete('bulk')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Bulk delete inventory items' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory items deleted successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async bulkRemove(@Body() dto: BulkDeleteInventoryDto, @Request() req) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const result = await this.inventoryService.bulkRemove(dto.ids, sellerId);
+    const lang = this.getLang(req);
+
+    if (result.failedIds.length > 0) {
+      return formatResponse(
+        result,
+        await this.i18n.t('inventory.INVENTORY_BULK_DELETE_PARTIAL', {
+          lang,
+          args: {
+            deleted: result.deletedCount,
+            failed: result.failedIds.length,
+          },
+        }),
+      );
+    }
+
+    return formatResponse(
+      result,
+      await this.i18n.t('inventory.INVENTORY_BULK_DELETED', {
+        lang,
+        args: { count: result.deletedCount },
+      }),
     );
   }
 
@@ -203,7 +247,8 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async remove(@Param('id') id: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     await this.inventoryService.remove(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -212,4 +257,3 @@ export class InventoryController {
     );
   }
 }
-

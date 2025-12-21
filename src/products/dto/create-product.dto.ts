@@ -124,6 +124,56 @@ class KeyFeatureDto {
   descriptionAr: string;
 }
 
+// Discount DTO
+class DiscountDto {
+  @ApiProperty({
+    example: 'percent',
+    description: 'Discount type (percent or fixed)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @ApiProperty({
+    example: 10,
+    description: 'Discount value',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  value?: number;
+
+  @ApiProperty({
+    example: 10,
+    description: 'Discount amount',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  amount?: number;
+
+  @ApiProperty({
+    example: '2024-01-01T00:00:00Z',
+    description: 'Discount start date (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string | null;
+
+  @ApiProperty({
+    example: '2024-12-31T23:59:59Z',
+    description: 'Discount end date (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string | null;
+}
+
 // Pricing DTO
 class PricingDto {
   @ApiProperty({ example: 99.99, description: 'Original price' })
@@ -161,6 +211,16 @@ class PricingDto {
   @IsNumber()
   @Min(0)
   discountPercantge?: number; // Note: keeping typo as per user request
+
+  @ApiProperty({
+    description: 'Discount information (optional)',
+    type: DiscountDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DiscountDto)
+  discount?: DiscountDto;
 
   @ApiProperty({
     example: '2024-01-01T00:00:00Z',
@@ -219,6 +279,15 @@ class InventoryDto {
   @IsOptional()
   @IsString()
   productType?: string;
+
+  @ApiProperty({
+    example: 'PROD-001',
+    description: 'Generated SKU (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  skuGenerated?: string;
 }
 
 // Variants DTO
