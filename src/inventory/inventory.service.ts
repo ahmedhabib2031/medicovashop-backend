@@ -108,8 +108,8 @@ export class InventoryService {
       const products = await this.productModel
         .find({
           $or: [
-            { productName: { $regex: search, $options: 'i' } },
-            { productNameAr: { $regex: search, $options: 'i' } },
+            { nameEn: { $regex: search, $options: 'i' } },
+            { nameAr: { $regex: search, $options: 'i' } },
           ],
         })
         .select('_id');
@@ -158,8 +158,180 @@ export class InventoryService {
     const [data, total] = await Promise.all([
       this.inventoryModel
         .find(query)
-        .populate('productId', 'productName productNameAr sku')
+        .populate('productId', 'nameEn nameAr sku')
         .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.inventoryModel.countDocuments(query),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async findAllWithFilters(
+    filters: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      productId?: string;
+      productIds?: string[];
+      status?: string;
+      minQuantity?: number;
+      maxQuantity?: number;
+      active?: boolean;
+      storeId?: string;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    },
+    sellerId?: string,
+  ) {
+    const page = filters.page || 1;
+    const limit = filters.limit || 10;
+    const skip = (page - 1) * limit;
+    const query: any = {};
+
+    // Product ID filter (single or multiple)
+    if (filters.productIds && filters.productIds.length > 0) {
+      query.productId = { $in: filters.productIds };
+    } else if (filters.productId) {
+      query.productId = filters.productId;
+    }
+
+    // Store ID filter (from URL parameter)
+    if (filters.storeId) {
+      const storeProducts = await this.productModel
+        .find({ store: filters.storeId })
+        .select('_id');
+      const productIds = storeProducts.map((p) => p._id);
+      if (query.productId) {
+        // Combine with existing productId filter
+        if (query.productId.$in) {
+          query.productId.$in = query.productId.$in.filter((id: any) =>
+            productIds.some((pid) => pid.toString() === id.toString()),
+          );
+        } else {
+          query.productId = {
+            $in: productIds.filter(
+              (pid) => pid.toString() === query.productId.toString(),
+            ),
+          };
+        }
+      } else {
+        query.productId = { $in: productIds };
+      }
+    }
+
+    // Seller ID filter
+    if (sellerId) {
+      const sellerProducts = await this.productModel
+        .find({ sellerId })
+        .select('_id');
+      const productIds = sellerProducts.map((p) => p._id);
+      if (query.productId) {
+        if (query.productId.$in) {
+          query.productId.$in = query.productId.$in.filter((id: any) =>
+            productIds.some((pid) => pid.toString() === id.toString()),
+          );
+        } else {
+          query.productId = {
+            $in: productIds.filter(
+              (pid) => pid.toString() === query.productId.toString(),
+            ),
+          };
+        }
+      } else {
+        query.productId = { $in: productIds };
+      }
+    }
+
+    // Search filter
+    if (filters.search) {
+      const products = await this.productModel
+        .find({
+          $or: [
+            { nameEn: { $regex: filters.search, $options: 'i' } },
+            { nameAr: { $regex: filters.search, $options: 'i' } },
+          ],
+        })
+        .select('_id');
+      const productIds = products.map((p) => p._id);
+      if (query.productId) {
+        if (query.productId.$in) {
+          query.productId.$in = query.productId.$in.filter((id: any) =>
+            productIds.some((pid) => pid.toString() === id.toString()),
+          );
+        } else {
+          query.productId = {
+            $in: productIds.filter(
+              (pid) => pid.toString() === query.productId.toString(),
+            ),
+          };
+        }
+      } else {
+        query.productId = { $in: productIds };
+      }
+    }
+
+    // Active filter
+    if (filters.active !== undefined) {
+      query.active = filters.active;
+    }
+
+    // Build quantity filter combining status and quantity range
+    const quantityFilter: any = {};
+
+    // Apply status filter
+    if (filters.status === 'in_stock') {
+      quantityFilter.$gt = 0;
+    } else if (filters.status === 'out_of_stock') {
+      quantityFilter.$lte = 0;
+    }
+
+    // Apply quantity range filters
+    if (filters.minQuantity !== undefined) {
+      if (quantityFilter.$gt !== undefined) {
+        quantityFilter.$gte = Math.max(filters.minQuantity, 1);
+        delete quantityFilter.$gt;
+      } else if (quantityFilter.$lte !== undefined) {
+        quantityFilter.$gte = Math.min(filters.minQuantity, 0);
+      } else {
+        quantityFilter.$gte = filters.minQuantity;
+      }
+    }
+
+    if (filters.maxQuantity !== undefined) {
+      if (quantityFilter.$lte !== undefined) {
+        quantityFilter.$lte = Math.min(filters.maxQuantity, 0);
+      } else {
+        quantityFilter.$lte = filters.maxQuantity;
+      }
+    }
+
+    // Apply quantity filter if any conditions were set
+    if (Object.keys(quantityFilter).length > 0) {
+      query.totalQuantity = quantityFilter;
+    }
+
+    // Build sort object
+    const sort: any = {};
+    if (filters.sortBy) {
+      sort[filters.sortBy] = filters.sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sort.createdAt = -1; // Default sort
+    }
+
+    const [data, total] = await Promise.all([
+      this.inventoryModel
+        .find(query)
+        .populate('productId', 'nameEn nameAr sku')
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -193,7 +365,7 @@ export class InventoryService {
     // Populate productId after validation
     await inventory.populate(
       'productId',
-      'productName productNameAr sku sizes colors stockQuantity',
+      'nameEn nameAr sku sizes colors stockQuantity',
     );
 
     return inventory;
@@ -220,7 +392,7 @@ export class InventoryService {
     // Populate productId after validation
     await inventory.populate(
       'productId',
-      'productName productNameAr sku sizes colors stockQuantity',
+      'nameEn nameAr sku sizes colors stockQuantity',
     );
 
     return inventory;

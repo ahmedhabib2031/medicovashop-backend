@@ -17,6 +17,7 @@ import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
 import { BulkDeleteInventoryDto } from './dto/bulk-delete-inventory.dto';
+import { FilterInventoryDto } from './dto/filter-inventory.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -73,7 +74,7 @@ export class InventoryController {
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SELLER)
-  @ApiOperation({ summary: 'Get all inventory items' })
+  @ApiOperation({ summary: 'Get all inventory items (Query Parameters)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -122,6 +123,103 @@ export class InventoryController {
       status,
       minQuantity ? parseFloat(minQuantity) : undefined,
       maxQuantity ? parseFloat(maxQuantity) : undefined,
+    );
+    const lang = this.getLang(req);
+    return formatResponse(
+      result,
+      await this.i18n.t('inventory.INVENTORY_RETRIEVED', { lang }),
+    );
+  }
+
+  @Post('filter')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get all inventory items with body and query parameters',
+    description:
+      'Filter inventory items using request body and query parameters',
+  })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory items retrieved successfully',
+  })
+  async findAllWithBody(
+    @Body() filterDto: FilterInventoryDto,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+    @Request() req?,
+  ) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const result = await this.inventoryService.findAllWithFilters(
+      {
+        page: filterDto.page || 1,
+        limit: filterDto.limit || 10,
+        search: filterDto.search,
+        productId: filterDto.productId,
+        productIds: filterDto.productIds,
+        status: filterDto.status,
+        minQuantity: filterDto.minQuantity,
+        maxQuantity: filterDto.maxQuantity,
+        active: filterDto.active,
+        sortBy,
+        sortOrder,
+      },
+      sellerId,
+    );
+    const lang = this.getLang(req);
+    return formatResponse(
+      result,
+      await this.i18n.t('inventory.INVENTORY_RETRIEVED', { lang }),
+    );
+  }
+
+  @Post('filter/store/:storeId')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get all inventory items with body, URL, and query parameters',
+    description:
+      'Filter inventory items using request body, URL parameters (storeId), and query parameters',
+  })
+  @ApiParam({
+    name: 'storeId',
+    type: String,
+    description: 'Store ID from URL',
+  })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory items retrieved successfully',
+  })
+  async findAllWithBodyAndUrl(
+    @Body() filterDto: FilterInventoryDto,
+    @Param('storeId') storeId: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+    @Request() req?,
+  ) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const result = await this.inventoryService.findAllWithFilters(
+      {
+        page: filterDto.page || 1,
+        limit: filterDto.limit || 10,
+        search: filterDto.search,
+        productId: filterDto.productId,
+        productIds: filterDto.productIds,
+        status: filterDto.status,
+        minQuantity: filterDto.minQuantity,
+        maxQuantity: filterDto.maxQuantity,
+        active: filterDto.active,
+        storeId,
+        sortBy,
+        sortOrder,
+      },
+      sellerId,
     );
     const lang = this.getLang(req);
     return formatResponse(
