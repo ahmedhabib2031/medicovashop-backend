@@ -121,16 +121,76 @@ export class ProductsController {
     summary: 'Get all products',
     description: 'Get all products with pagination, search, and filters (Public endpoint)',
   })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'category', required: false, type: String })
-  @ApiQuery({ name: 'subcategory', required: false, type: String })
-  @ApiQuery({ name: 'brand', required: false, type: String })
-  @ApiQuery({ name: 'store', required: false, type: String })
-  @ApiQuery({ name: 'active', required: false, type: Boolean })
-  @ApiQuery({ name: 'minPrice', required: false, type: Number })
-  @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number for pagination',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term to filter products by name, SKU, permalink, or description',
+    example: 'laptop',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    type: String,
+    description: 'Filter by category ID (MongoDB ObjectId)',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @ApiQuery({
+    name: 'subcategory',
+    required: false,
+    type: String,
+    description: 'Filter by subcategory ID (MongoDB ObjectId)',
+    example: '507f1f77bcf86cd799439012',
+  })
+  @ApiQuery({
+    name: 'brand',
+    required: false,
+    type: String,
+    description: 'Filter by brand ID (MongoDB ObjectId)',
+    example: '507f1f77bcf86cd799439013',
+  })
+  @ApiQuery({
+    name: 'store',
+    required: false,
+    type: String,
+    description: 'Filter by store ID (MongoDB ObjectId)',
+    example: '507f1f77bcf86cd799439014',
+  })
+  @ApiQuery({
+    name: 'active',
+    required: false,
+    type: Boolean,
+    description: 'Filter by product active status (true/false). Default: true for public/users, all for admin/seller',
+    example: true,
+  })
+  @ApiQuery({
+    name: 'minPrice',
+    required: false,
+    type: Number,
+    description: 'Minimum price filter (filters by originalPrice)',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'maxPrice',
+    required: false,
+    type: Number,
+    description: 'Maximum price filter (filters by originalPrice)',
+    example: 1000,
+  })
   @ApiResponse({ status: 200, description: 'Products fetched successfully' })
   async findAll(
     @Query('page') page,

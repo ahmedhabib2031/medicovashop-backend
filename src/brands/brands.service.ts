@@ -1,7 +1,12 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Brand, BrandDocument } from './entities/brand.entity';
+import { Product, ProductDocument } from '../products/entities/product.entity';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto, UpdateBrandStatusDto } from './dto/update-brand.dto';
 
@@ -9,6 +14,7 @@ import { UpdateBrandDto, UpdateBrandStatusDto } from './dto/update-brand.dto';
 export class BrandService {
   constructor(
     @InjectModel(Brand.name) private brandModel: Model<BrandDocument>,
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
   async create(dto: CreateBrandDto): Promise<Brand> {
@@ -45,14 +51,37 @@ export class BrandService {
       .sort({ sortOrder: 1, priority: 1, createdAt: -1 })
       .lean();
 
-    const data = brands.map(brand => ({
+    // Get all brand IDs from the current page
+    const brandIds = brands.map((brand) => brand._id);
+
+    // Count products for each brand using aggregation
+    const productCounts = await this.productModel.aggregate([
+      {
+        $match: {
+          brand: { $in: brandIds },
+        },
+      },
+      {
+        $group: {
+          _id: '$brand',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Create a map of brand ID to product count for quick lookup
+    const productCountMap = new Map(
+      productCounts.map((item) => [item._id.toString(), item.count]),
+    );
+
+    const data = brands.map((brand) => ({
       _id: brand._id,
       name: brand.name,
       nameAr: brand.nameAr,
       logo: brand.logo,
       priority: brand.priority,
       status: brand.active,
-      products: 0,
+      products: productCountMap.get(brand._id.toString()) || 0,
       totalOrders: 0,
       totalSales: 0,
     }));
@@ -67,7 +96,9 @@ export class BrandService {
   }
 
   async update(id: string, dto: UpdateBrandDto): Promise<Brand> {
-    const brand = await this.brandModel.findByIdAndUpdate(id, dto, { new: true });
+    const brand = await this.brandModel.findByIdAndUpdate(id, dto, {
+      new: true,
+    });
     if (!brand) throw new NotFoundException('BRAND_NOT_FOUND');
     return brand;
   }
@@ -79,17 +110,16 @@ export class BrandService {
   }
 
   async updateStatus(id: string, dto: UpdateBrandStatusDto) {
-  const brand = await this.brandModel.findByIdAndUpdate(
-    id,
-    { active: dto.active },
-    { new: true }
-  );
+    const brand = await this.brandModel.findByIdAndUpdate(
+      id,
+      { active: dto.active },
+      { new: true },
+    );
 
-  if (!brand) {
-    throw new NotFoundException("Brand not found");
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    return brand;
   }
-
-  return brand;
-}
-
 }
