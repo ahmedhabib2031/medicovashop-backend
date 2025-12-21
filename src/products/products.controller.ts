@@ -206,10 +206,10 @@ export class ProductsController {
   }
 
   @Get('seller/my-products')
-  @Roles(UserRole.SELLER)
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
-    summary: 'Get seller products',
-    description: 'Get all products for the authenticated seller (Seller only)',
+    summary: 'Get seller products (or all products for admin)',
+    description: 'Get all products for the authenticated seller, or all products if admin',
   })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
@@ -221,8 +221,8 @@ export class ProductsController {
   @ApiQuery({ name: 'active', required: false, type: Boolean })
   @ApiQuery({ name: 'minPrice', required: false, type: Number })
   @ApiQuery({ name: 'maxPrice', required: false, type: Number })
-  @ApiResponse({ status: 200, description: 'Seller products fetched successfully' })
-  @ApiResponse({ status: 403, description: 'Access denied - Seller only' })
+  @ApiResponse({ status: 200, description: 'Products fetched successfully' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
   async getSellerProducts(
     @Query('page') page,
     @Query('limit') limit,
@@ -239,12 +239,6 @@ export class ProductsController {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
 
-    // Get seller ID from token
-    const sellerId = req.user.id || req.user.userId;
-    if (!sellerId) {
-      throw new ForbiddenException('Seller ID not found in token');
-    }
-
     const query: any = {
       page: pageNum,
       limit: limitNum,
@@ -253,10 +247,19 @@ export class ProductsController {
       subcategory,
       brand,
       store,
-      sellerId, // Automatically filter by seller's ID
     };
 
-    // Sellers can filter by active status to see all their products (active and inactive)
+    // If seller, filter by seller's ID; if admin, return all products
+    if (req.user.role === UserRole.SELLER) {
+      const sellerId = req.user.id || req.user.userId;
+      if (!sellerId) {
+        throw new ForbiddenException('Seller ID not found in token');
+      }
+      query.sellerId = sellerId; // Filter by seller's ID
+    }
+    // Admin can see all products, so no sellerId filter is applied
+
+    // Filter by active status
     if (active !== undefined) {
       query.active = active === 'true';
     }
