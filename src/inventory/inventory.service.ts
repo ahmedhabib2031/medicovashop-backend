@@ -650,39 +650,86 @@ export class InventoryService {
       sellerProductIds = sellerProducts.map((p) => p._id.toString());
     }
 
-    // Process each inventory deletion
+    // Process each ID (could be inventory ID or variant ID)
     for (const id of ids) {
       try {
-        const inventory = await this.inventoryModel.findById(id);
+        // First, try to find as inventory ID
+        let inventory = await this.inventoryModel.findById(id);
 
-        if (!inventory) {
-          failedIds.push(id);
-          continue;
-        }
+        if (inventory) {
+          // It's an inventory ID - delete entire inventory
+          // Check if seller owns the product
+          if (sellerId) {
+            const productId = inventory.productId.toString();
+            if (!sellerProductIds.includes(productId)) {
+              failedIds.push(id);
+              continue;
+            }
+          }
 
-        // Check if seller owns the product
-        if (sellerId) {
-          const productId = inventory.productId.toString();
-          if (!sellerProductIds.includes(productId)) {
+          // Explicitly clear variants before deletion
+          if (inventory.variants && inventory.variants.length > 0) {
+            inventory.variants = [];
+            await inventory.save();
+          }
+
+          // Delete the inventory document
+          await this.inventoryModel.findByIdAndDelete(id);
+          deletedCount++;
+        } else {
+          // Not found as inventory ID, try to find as variant ID
+          const variantIdObj = Types.ObjectId.isValid(id)
+            ? new Types.ObjectId(id)
+            : null;
+
+          if (!variantIdObj) {
             failedIds.push(id);
             continue;
           }
-        }
 
-        // Explicitly clear variants before deletion
-        // This ensures all variant data (including images, attributes, etc.) is removed
-        // Note: Variants are also automatically deleted when the inventory document is deleted,
-        // but explicit clearing ensures proper cleanup and makes the intent clear
-        if (inventory.variants && inventory.variants.length > 0) {
-          inventory.variants = [];
+          // Search for inventory containing this variant
+          inventory = await this.inventoryModel.findOne({
+            'variants._id': variantIdObj,
+          });
+
+          if (!inventory) {
+            failedIds.push(id);
+            continue;
+          }
+
+          // Check if seller owns the product
+          if (sellerId) {
+            const productId = inventory.productId.toString();
+            if (!sellerProductIds.includes(productId)) {
+              failedIds.push(id);
+              continue;
+            }
+          }
+
+          // Find and remove the variant
+          const variantIndex = inventory.variants.findIndex(
+            (v: any) => v._id && v._id.toString() === variantIdObj.toString(),
+          );
+
+          if (variantIndex === -1) {
+            failedIds.push(id);
+            continue;
+          }
+
+          // Remove the variant from the array
+          inventory.variants.splice(variantIndex, 1);
+
+          // Recalculate total quantity
+          const totalQuantity = inventory.variants.reduce(
+            (sum, v) => sum + v.quantity,
+            0,
+          );
+          inventory.totalQuantity = totalQuantity;
+
+          // Save the inventory with updated variants
           await inventory.save();
+          deletedCount++;
         }
-
-        // Delete the inventory document
-        // All nested variants are automatically deleted when the inventory document is deleted
-        // MongoDB/Mongoose automatically removes all subdocuments (variants array) when the parent document is deleted
-        await this.inventoryModel.findByIdAndDelete(id);
-        deletedCount++;
       } catch (error) {
         failedIds.push(id);
       }

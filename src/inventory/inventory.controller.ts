@@ -437,10 +437,14 @@ export class InventoryController {
   @Delete('bulk')
   @Roles(UserRole.ADMIN, UserRole.SELLER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Bulk delete inventory items' })
+  @ApiOperation({
+    summary: 'Bulk delete inventory items or variants',
+    description:
+      'Delete multiple inventory items or variants. Accepts both inventory IDs and variant IDs. If inventory ID is provided, deletes entire inventory. If variant ID is provided, deletes only that variant.',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Inventory items deleted successfully',
+    description: 'Inventory items or variants deleted successfully',
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async bulkRemove(@Body() dto: BulkDeleteInventoryDto, @Request() req) {
@@ -481,7 +485,8 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async remove(@Param('id') id: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     await this.inventoryService.remove(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
