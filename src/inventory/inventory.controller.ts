@@ -78,6 +78,25 @@ export class InventoryController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'productId', required: false, type: String })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    type: String,
+    enum: ['in_stock', 'out_of_stock'],
+    description: 'Filter by inventory status (in_stock or out_of_stock)',
+  })
+  @ApiQuery({
+    name: 'minQuantity',
+    required: false,
+    type: Number,
+    description: 'Minimum quantity filter',
+  })
+  @ApiQuery({
+    name: 'maxQuantity',
+    required: false,
+    type: Number,
+    description: 'Maximum quantity filter',
+  })
   @ApiResponse({
     status: 200,
     description: 'Inventory items retrieved successfully',
@@ -87,6 +106,9 @@ export class InventoryController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('productId') productId?: string,
+    @Query('status') status?: string,
+    @Query('minQuantity') minQuantity?: string,
+    @Query('maxQuantity') maxQuantity?: string,
     @Request() req?,
   ) {
     const sellerId =
@@ -97,6 +119,9 @@ export class InventoryController {
       search,
       productId,
       sellerId,
+      status,
+      minQuantity ? parseFloat(minQuantity) : undefined,
+      maxQuantity ? parseFloat(maxQuantity) : undefined,
     );
     const lang = this.getLang(req);
     return formatResponse(

@@ -45,4 +45,3 @@ export class ProductInventory {
 
 export const ProductInventorySchema =
   SchemaFactory.createForClass(ProductInventory);
-

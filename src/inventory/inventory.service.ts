@@ -83,6 +83,9 @@ export class InventoryService {
     search?: string,
     productId?: string,
     sellerId?: string,
+    status?: string,
+    minQuantity?: number,
+    maxQuantity?: number,
   ) {
     const skip = (page - 1) * limit;
     const query: any = {};
@@ -112,6 +115,44 @@ export class InventoryService {
         .select('_id');
       const productIds = products.map((p) => p._id);
       query.productId = { $in: productIds };
+    }
+
+    // Build quantity filter combining status and quantity range
+    const quantityFilter: any = {};
+
+    // Apply status filter
+    if (status === 'in_stock') {
+      quantityFilter.$gt = 0;
+    } else if (status === 'out_of_stock') {
+      quantityFilter.$lte = 0;
+    }
+
+    // Apply quantity range filters
+    if (minQuantity !== undefined) {
+      if (quantityFilter.$gt !== undefined) {
+        // If status is in_stock, ensure minQuantity is at least 1
+        quantityFilter.$gte = Math.max(minQuantity, 1);
+        delete quantityFilter.$gt;
+      } else if (quantityFilter.$lte !== undefined) {
+        // If status is out_of_stock, minQuantity should be <= 0
+        quantityFilter.$gte = Math.min(minQuantity, 0);
+      } else {
+        quantityFilter.$gte = minQuantity;
+      }
+    }
+
+    if (maxQuantity !== undefined) {
+      if (quantityFilter.$lte !== undefined) {
+        // If status is out_of_stock, ensure maxQuantity is at most 0
+        quantityFilter.$lte = Math.min(maxQuantity, 0);
+      } else {
+        quantityFilter.$lte = maxQuantity;
+      }
+    }
+
+    // Apply quantity filter if any conditions were set
+    if (Object.keys(quantityFilter).length > 0) {
+      query.totalQuantity = quantityFilter;
     }
 
     const [data, total] = await Promise.all([
@@ -204,7 +245,7 @@ export class InventoryService {
     }
 
     // If updating productId, check if new product exists
-    let product = await this.productModel.findById(
+    const product = await this.productModel.findById(
       dto.productId || inventory.productId,
     );
     if (!product) {
@@ -282,7 +323,10 @@ export class InventoryService {
     await this.inventoryModel.findByIdAndDelete(id);
   }
 
-  async bulkRemove(ids: string[], sellerId?: string): Promise<{
+  async bulkRemove(
+    ids: string[],
+    sellerId?: string,
+  ): Promise<{
     deletedCount: number;
     failedIds: string[];
   }> {
@@ -306,7 +350,7 @@ export class InventoryService {
     for (const id of ids) {
       try {
         const inventory = await this.inventoryModel.findById(id);
-        
+
         if (!inventory) {
           failedIds.push(id);
           continue;
@@ -357,4 +401,3 @@ export class InventoryService {
     }
   }
 }
-
