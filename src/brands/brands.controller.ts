@@ -17,6 +17,8 @@ import { formatResponse } from 'src/common/utils/response.util';
 @ApiTags('Brands')
 @ApiBearerAuth('JWT-auth')
 @Controller('brands')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class BrandController {
   constructor(
     private readonly brandService: BrandService,
@@ -28,8 +30,6 @@ export class BrandController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   async create(@Body() dto: CreateBrandDto, @Req() req) {
     try {
       const brand = await this.brandService.create(dto);
@@ -74,8 +74,6 @@ export class BrandController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   async update(@Param('id') id: string, @Body() dto: UpdateBrandDto, @Req() req) {
     const brand = await this.brandService.update(id, dto);
     const lang = this.getLang(req);
@@ -83,17 +81,13 @@ export class BrandController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   async remove(@Param('id') id: string, @Req() req) {
     await this.brandService.remove(id);
     const lang = this.getLang(req);
     return formatResponse(null, await this.i18n.t('brand.DELETE_SUCCESS', { lang }));
   }
 
-  @Patch(':id/status')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+@Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateBrandStatusDto,

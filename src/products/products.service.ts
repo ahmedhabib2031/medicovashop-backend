@@ -4,9 +4,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
-import { Order, OrderDocument } from '../orders/entities/order.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateProductStatusDto } from './dto/update-product-status.dto';
@@ -15,9 +14,7 @@ import { UpdateProductStatusDto } from './dto/update-product-status.dto';
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
-    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
   ) {}
-
 
   async create(dto: CreateProductDto, sellerId?: string, adminId?: string): Promise<Product> {
     // Check if permalink already exists
@@ -57,30 +54,39 @@ export class ProductsService {
       childCategory: dto.classification.childCategory || null,
       brand: dto.classification.brand,
       productType: dto.classification.productType || 'Physical Product',
-      store: dto.store || null,
+      store: dto.store,
       descriptionEn: dto.descriptions.descriptionEn,
       descriptionAr: dto.descriptions.descriptionAr,
       createdBy: dto.createdBy || (sellerId ? 'seller' : 'admin'),
       createdById: sellerId || adminId || null,
       keyFeatures: dto.keyFeatures || [],
-      featuredImages: dto.media?.featuredImages || null,
+      featuredImages: dto.media?.featuredImages || [],
       galleryImages: dto.media?.galleryImages || [],
       productVideo: dto.media?.productVideo || null,
       originalPrice: dto.pricing.originalPrice,
       salePrice: dto.pricing.salePrice || null,
-      discountAmount: dto.pricing.discountAmount || null,
-      discountPercantge: dto.pricing.discountPercantge || null,
-      startDate: dto.pricing.startDate ? new Date(dto.pricing.startDate) : null,
-      endDate: dto.pricing.endDate ? new Date(dto.pricing.endDate) : null,
+      discount: dto.pricing.discount
+        ? {
+            type: dto.pricing.discount.type || 'percent',
+            value: dto.pricing.discount.value || 0,
+            amount: dto.pricing.discount.amount || 0,
+            startDate: dto.pricing.discount.startDate
+              ? new Date(dto.pricing.discount.startDate)
+              : null,
+            endDate: dto.pricing.discount.endDate
+              ? new Date(dto.pricing.discount.endDate)
+              : null,
+          }
+        : null,
       trackStock: dto.inventory?.trackStock !== undefined ? dto.inventory.trackStock : true,
       stockQuantity: dto.inventory?.stockQuantity || 0,
       stockStatus: dto.inventory?.stockStatus || 'in_stock',
       inventoryProductType: dto.inventory?.productType || 'simple',
+      skuGenerated: dto.inventory?.skuGenerated || sku,
       sizes: dto.variants?.sizes || [],
       colors: dto.variants?.colors || [],
-      variantsItems: dto.variants?.variantsItems || [],
       options: dto.variants?.options || [],
-      shipping: dto.shipping || [],
+      shipping: dto.shipping || null,
       specifications: dto.specifications || [],
       relatedProducts: dto.relations?.relatedProducts || [],
       crossSellingProducts: dto.relations?.crossSellingProducts || [],
@@ -92,20 +98,7 @@ export class ProductsService {
       productData.sellerId = sellerId;
     }
 
-    const createdProduct = await this.productModel.create(productData);
-    
-    // Populate for response
-    const populated = await this.productModel
-      .findById(createdProduct._id)
-      .populate('category', 'name nameAr')
-      .populate('subcategory', 'name nameAr')
-      .populate('childCategory', 'name nameAr')
-      .populate('brand', 'name nameAr logo')
-      .populate('store', 'name address')
-      .populate('sellerId', 'firstName lastName brandName email')
-      .lean();
-
-    return populated as Product;
+    return await this.productModel.create(productData);
   }
 
   async findAll(query: {
@@ -207,108 +200,7 @@ export class ProductsService {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
     }
 
-    // Orders that include this product
-    const productObjectId = new Types.ObjectId(id);
-    const orders = await this.orderModel
-      .find({ 'items.productId': productObjectId })
-      .populate('customerId', 'firstName lastName email phone')
-      .select(
-        'orderNumber status paymentStatus paymentMethod total createdAt items customerId',
-      )
-      .sort({ createdAt: -1 })
-      .lean();
-
-    const productOrders = orders.map((o: any) => {
-      const matchedItems = (o.items || []).filter(
-        (it: any) => it.productId?.toString?.() === id,
-      );
-      return {
-        _id: o._id,
-        orderNumber: o.orderNumber,
-        status: o.status,
-        paymentStatus: o.paymentStatus,
-        createdAt: o.createdAt,
-        total: o.total,
-        customer: o.customerId,
-        items: matchedItems,
-      };
-    });
-
-    // Top customers who bought this product (by total quantity)
-    const topCustomers = await this.orderModel
-      .aggregate([
-        { $match: { 'items.productId': productObjectId } },
-        { $unwind: '$items' },
-        { $match: { 'items.productId': productObjectId } },
-        {
-          $group: {
-            _id: '$customerId',
-            ordersCount: { $addToSet: '$_id' },
-            totalQuantity: { $sum: '$items.quantity' },
-            totalSpent: { $sum: '$items.subtotal' },
-            lastPurchaseAt: { $max: '$createdAt' },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            ordersCount: { $size: '$ordersCount' },
-            totalQuantity: 1,
-            totalSpent: 1,
-            lastPurchaseAt: 1,
-          },
-        },
-        { $sort: { totalQuantity: -1, totalSpent: -1 } },
-        { $limit: 5 },
-        {
-          $lookup: {
-            from: 'users',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'customer',
-          },
-        },
-        {
-          $addFields: {
-            customer: { $arrayElemAt: ['$customer', 0] },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            customerId: '$_id',
-            ordersCount: 1,
-            totalQuantity: 1,
-            totalSpent: 1,
-            lastPurchaseAt: 1,
-            customer: {
-              _id: '$customer._id',
-              firstName: '$customer.firstName',
-              lastName: '$customer.lastName',
-              email: '$customer.email',
-              phone: '$customer.phone',
-            },
-          },
-        },
-      ])
-      .exec();
-
-    // Dummy transactions (for UI): paymentType/amount/createdAt
-    const transactions = productOrders.map((o: any) => ({
-      orderId: o._id,
-      transactionId: `DUMMY-${o.orderNumber}`,
-      paymentType: 'dummy_card',
-      amount: o.total ?? 0,
-      createdAt: o.createdAt,
-      isDummy: true,
-    }));
-
-    return {
-      ...(product as any),
-      orders: productOrders,
-      topCustomers,
-      transactions,
-    } as any;
+    return product as Product;
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<Product> {
@@ -380,10 +272,21 @@ export class ProductsService {
     if (dto.pricing) {
       if (dto.pricing.originalPrice !== undefined) updateData.originalPrice = dto.pricing.originalPrice;
       if (dto.pricing.salePrice !== undefined) updateData.salePrice = dto.pricing.salePrice || null;
-      if (dto.pricing.discountAmount !== undefined) updateData.discountAmount = dto.pricing.discountAmount || null;
-      if (dto.pricing.discountPercantge !== undefined) updateData.discountPercantge = dto.pricing.discountPercantge || null;
-      if (dto.pricing.startDate !== undefined) updateData.startDate = dto.pricing.startDate ? new Date(dto.pricing.startDate) : null;
-      if (dto.pricing.endDate !== undefined) updateData.endDate = dto.pricing.endDate ? new Date(dto.pricing.endDate) : null;
+      if (dto.pricing.discount !== undefined) {
+        updateData.discount = dto.pricing.discount
+          ? {
+              type: dto.pricing.discount.type || 'percent',
+              value: dto.pricing.discount.value || 0,
+              amount: dto.pricing.discount.amount || 0,
+              startDate: dto.pricing.discount.startDate
+                ? new Date(dto.pricing.discount.startDate)
+                : null,
+              endDate: dto.pricing.discount.endDate
+                ? new Date(dto.pricing.discount.endDate)
+                : null,
+            }
+          : null;
+      }
     }
 
     // Inventory
@@ -392,18 +295,18 @@ export class ProductsService {
       if (dto.inventory.stockQuantity !== undefined) updateData.stockQuantity = dto.inventory.stockQuantity;
       if (dto.inventory.stockStatus !== undefined) updateData.stockStatus = dto.inventory.stockStatus;
       if (dto.inventory.productType !== undefined) updateData.inventoryProductType = dto.inventory.productType;
+      if (dto.inventory.skuGenerated !== undefined) updateData.skuGenerated = dto.inventory.skuGenerated;
     }
 
     // Variants
     if (dto.variants) {
       if (dto.variants.sizes !== undefined) updateData.sizes = dto.variants.sizes;
       if (dto.variants.colors !== undefined) updateData.colors = dto.variants.colors;
-      if (dto.variants.variantsItems !== undefined) updateData.variantsItems = dto.variants.variantsItems;
       if (dto.variants.options !== undefined) updateData.options = dto.variants.options;
     }
 
     // Shipping
-    if (dto.shipping !== undefined) updateData.shipping = dto.shipping || [];
+    if (dto.shipping !== undefined) updateData.shipping = dto.shipping;
 
     // Specifications
     if (dto.specifications !== undefined) updateData.specifications = dto.specifications;

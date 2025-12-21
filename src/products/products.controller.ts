@@ -28,6 +28,7 @@ import { UpdateProductStatusDto } from './dto/update-product-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/public.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { I18nService } from 'nestjs-i18n';
 import { formatResponse } from '../common/utils/response.util';
@@ -115,10 +116,10 @@ export class ProductsController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.SELLER, UserRole.USER)
+  @Public()
   @ApiOperation({
     summary: 'Get all products',
-    description: 'Get all products with pagination, search, and filters',
+    description: 'Get all products with pagination, search, and filters (Public endpoint)',
   })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -157,20 +158,26 @@ export class ProductsController {
       store,
     };
 
-    // If seller, only show their products (enforce sellerId filter)
-    if (req.user.role === UserRole.SELLER) {
+    // If authenticated and seller, only show their products (enforce sellerId filter)
+    if (req.user?.role === UserRole.SELLER) {
       query.sellerId = req.user.id;
       // Sellers can see all their products (active and inactive) for management
       if (active !== undefined) {
         query.active = active === 'true';
       }
-    }
-
-    // If user (not admin/seller), only show active products
-    if (req.user.role === UserRole.USER) {
-      query.active = true;
-    } else if (active !== undefined) {
-      query.active = active === 'true';
+    } else {
+      // For public access or regular users, only show active products by default
+      if (req.user?.role === UserRole.USER) {
+        query.active = true;
+      } else if (req.user?.role === UserRole.ADMIN) {
+        // Admins can see all products
+        if (active !== undefined) {
+          query.active = active === 'true';
+        }
+      } else {
+        // Public access - only show active products
+        query.active = active !== undefined ? (active === 'true') : true;
+      }
     }
 
     if (minPrice) {
@@ -199,10 +206,10 @@ export class ProductsController {
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.SELLER, UserRole.USER)
+  @Public()
   @ApiOperation({
     summary: 'Get product by ID',
-    description: 'Get a specific product by ID',
+    description: 'Get a specific product by ID (Public endpoint)',
   })
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Product fetched successfully' })
@@ -210,8 +217,8 @@ export class ProductsController {
   async findOne(@Param('id') id: string, @Req() req) {
     const product = await this.productsService.findOne(id);
 
-    // If seller, ensure they can only access their own products
-    if (req.user.role === UserRole.SELLER) {
+    // If authenticated and seller, ensure they can only access their own products
+    if (req.user?.role === UserRole.SELLER) {
       const productSellerId =
         (product as any).sellerId?._id?.toString() ||
         (product as any).sellerId?.toString();
@@ -221,9 +228,11 @@ export class ProductsController {
       }
     }
 
-    // If user (not admin/seller), only show active products
-    if (req.user.role === UserRole.USER && !(product as any).active) {
-      throw new ForbiddenException('Product not available');
+    // For public access or regular users, only show active products
+    if (!req.user || req.user.role === UserRole.USER) {
+      if (!(product as any).active) {
+        throw new ForbiddenException('Product not available');
+      }
     }
 
     const lang = this.getLang(req);

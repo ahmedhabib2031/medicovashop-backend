@@ -16,7 +16,6 @@ import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
-import { UpdateInventoryVariantDto } from './dto/update-inventory-variant.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -61,8 +60,7 @@ export class InventoryController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async create(@Body() dto: CreateInventoryDto, @Request() req) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.create(dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -89,8 +87,7 @@ export class InventoryController {
     @Query('productId') productId?: string,
     @Request() req?,
   ) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const result = await this.inventoryService.findAll(
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 10,
@@ -115,8 +112,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async findByProductId(@Param('productId') productId: string, @Request() req) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.findByProductId(
       productId,
       sellerId,
@@ -138,8 +134,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async findOne(@Param('id') id: string, @Request() req) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.findOne(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -162,8 +157,7 @@ export class InventoryController {
     @Body() dto: UpdateInventoryDto,
     @Request() req,
   ) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.update(id, dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -186,8 +180,7 @@ export class InventoryController {
     @Body() dto: UpdateInventoryStatusDto,
     @Request() req,
   ) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     const inventory = await this.inventoryService.updateStatus(
       id,
       dto,
@@ -197,94 +190,6 @@ export class InventoryController {
     return formatResponse(
       inventory,
       await this.i18n.t('inventory.INVENTORY_STATUS_UPDATED', { lang }),
-    );
-  }
-
-  @Patch(':id/variant')
-  @Roles(UserRole.ADMIN, UserRole.SELLER)
-  @ApiOperation({ summary: 'Update a single inventory variant' })
-  @ApiParam({ name: 'id', description: 'Inventory ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Inventory variant updated successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Inventory or variant not found' })
-  async updateVariant(
-    @Param('id') id: string,
-    @Body() dto: UpdateInventoryVariantDto,
-    @Request() req,
-  ) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
-    const inventory = await this.inventoryService.updateVariant(
-      id,
-      dto,
-      sellerId,
-    );
-    const lang = this.getLang(req);
-    return formatResponse(
-      inventory,
-      await this.i18n.t('inventory.INVENTORY_UPDATED', { lang }),
-    );
-  }
-
-  @Patch(':id/variant/:variantId')
-  @Roles(UserRole.ADMIN, UserRole.SELLER)
-  @ApiOperation({ summary: 'Update an inventory variant by variant ID' })
-  @ApiParam({ name: 'id', description: 'Inventory ID' })
-  @ApiParam({ name: 'variantId', description: 'Variant ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Inventory variant updated successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Inventory or variant not found' })
-  async updateVariantById(
-    @Param('id') id: string,
-    @Param('variantId') variantId: string,
-    @Body() dto: UpdateInventoryVariantDto,
-    @Request() req,
-  ) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
-    const inventory = await this.inventoryService.updateVariantById(
-      id,
-      variantId,
-      dto,
-      sellerId,
-    );
-    const lang = this.getLang(req);
-    return formatResponse(
-      inventory,
-      await this.i18n.t('inventory.INVENTORY_UPDATED', { lang }),
-    );
-  }
-
-  @Delete(':id/variant/:variantId')
-  @Roles(UserRole.ADMIN, UserRole.SELLER)
-  @ApiOperation({ summary: 'Delete an inventory variant by variant ID' })
-  @ApiParam({ name: 'id', description: 'Inventory ID' })
-  @ApiParam({ name: 'variantId', description: 'Variant ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Inventory variant deleted successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Inventory or variant not found' })
-  async deleteVariantById(
-    @Param('id') id: string,
-    @Param('variantId') variantId: string,
-    @Request() req,
-  ) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
-    const inventory = await this.inventoryService.deleteVariantById(
-      id,
-      variantId,
-      sellerId,
-    );
-    const lang = this.getLang(req);
-    return formatResponse(
-      inventory,
-      await this.i18n.t('inventory.INVENTORY_UPDATED', { lang }),
     );
   }
 
@@ -298,8 +203,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async remove(@Param('id') id: string, @Request() req) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     await this.inventoryService.remove(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -308,3 +212,4 @@ export class InventoryController {
     );
   }
 }
+

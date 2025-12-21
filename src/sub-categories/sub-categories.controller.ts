@@ -12,6 +12,8 @@ import { formatResponse } from 'src/common/utils/response.util';
 @ApiTags('Subcategories')
 @ApiBearerAuth('JWT-auth')
 @Controller('subcategory')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class SubCategoryController {
   constructor(
     private readonly subCategoryService: SubCategoryService,
@@ -23,8 +25,6 @@ export class SubCategoryController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new subcategory', description: 'Create a new subcategory (Admin only)' })
   @ApiResponse({ status: 201, description: 'Subcategory successfully created' })
   @ApiResponse({ status: 400, description: 'Bad request - slug already exists' })
@@ -94,8 +94,6 @@ export class SubCategoryController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update subcategory', description: 'Update an existing subcategory' })
   @ApiParam({ name: 'id', description: 'Subcategory ID' })
   @ApiResponse({ status: 200, description: 'Subcategory successfully updated' })
@@ -106,8 +104,6 @@ export class SubCategoryController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete subcategory', description: 'Delete a subcategory by ID' })
   @ApiParam({ name: 'id', description: 'Subcategory ID' })
   @ApiResponse({ status: 200, description: 'Subcategory successfully deleted' })
@@ -118,8 +114,6 @@ export class SubCategoryController {
   }
 
   @Patch(':id/status')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update subcategory status', description: 'Update the active status of a subcategory' })
   @ApiParam({ name: 'id', description: 'Subcategory ID' })
   @ApiResponse({ status: 200, description: 'Subcategory status successfully updated' })

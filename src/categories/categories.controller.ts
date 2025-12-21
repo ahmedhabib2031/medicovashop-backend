@@ -12,6 +12,8 @@ import { formatResponse } from 'src/common/utils/response.util';
 @ApiTags('Categories')
 @ApiBearerAuth('JWT-auth')
 @Controller('category')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
@@ -23,8 +25,6 @@ export class CategoryController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new category', description: 'Create a new category (Admin only)' })
   @ApiResponse({ status: 201, description: 'Category successfully created' })
   @ApiResponse({ status: 400, description: 'Bad request - slug already exists' })
@@ -100,8 +100,6 @@ export class CategoryController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update category', description: 'Update an existing category' })
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiResponse({ status: 200, description: 'Category successfully updated' })
@@ -116,8 +114,6 @@ export class CategoryController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete category', description: 'Delete a category by ID' })
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiResponse({ status: 200, description: 'Category successfully deleted' })
@@ -131,8 +127,6 @@ export class CategoryController {
   }
 
   @Patch(':id/status')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update category status', description: 'Update the active status of a category' })
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiResponse({ status: 200, description: 'Category status successfully updated' })

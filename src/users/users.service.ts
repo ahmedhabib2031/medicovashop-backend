@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -173,29 +172,5 @@ export class UsersService {
     const obj = user.toObject();
     delete obj.password;
     return obj as any;
-  }
-
-  // Update seller root login email
-  async updateSellerRootEmail(
-    sellerId: string,
-    newEmail: string,
-  ): Promise<Partial<User>> {
-    const existingUser = await this.userModel.findOne({ email: newEmail });
-
-    if (existingUser && existingUser._id.toString() !== sellerId) {
-      throw new BadRequestException('Email is already in use');
-    }
-
-    const user = await this.userModel.findByIdAndUpdate(
-      sellerId,
-      { email: newEmail },
-      { new: true },
-    );
-
-    if (!user) throw new NotFoundException('Seller not found');
-
-    const obj = user.toObject();
-    delete obj.password;
-    return obj;
   }
 }

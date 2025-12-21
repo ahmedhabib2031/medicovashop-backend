@@ -49,18 +49,11 @@ export class SellerDocumentsController {
   @Post()
   @Roles(UserRole.SELLER)
   @ApiOperation({
-    summary: 'Upload or update seller documents',
-    description:
-      'Upload ID front and back documents (Seller only). If documents are already uploaded and still pending, this endpoint will update them instead of failing.',
+    summary: 'Upload seller documents',
+    description: 'Upload ID front and back documents (Seller only)',
   })
-  @ApiResponse({
-    status: 201,
-    description: 'Documents uploaded or updated successfully',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Documents have already been reviewed and cannot be changed',
-  })
+  @ApiResponse({ status: 201, description: 'Documents uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Documents already exist for this seller' })
   async uploadDocuments(@Body() dto: UploadSellerDocumentDto, @Req() req) {
     try {
       const document = await this.sellerDocumentsService.create(
