@@ -669,8 +669,17 @@ export class InventoryService {
           }
         }
 
+        // Explicitly clear variants before deletion
+        // This ensures all variant data (including images, attributes, etc.) is removed
+        // Note: Variants are also automatically deleted when the inventory document is deleted,
+        // but explicit clearing ensures proper cleanup and makes the intent clear
+        if (inventory.variants && inventory.variants.length > 0) {
+          inventory.variants = [];
+          await inventory.save();
+        }
+
         // Delete the inventory document
-        // Note: All nested variants are automatically deleted when the inventory document is deleted
+        // All nested variants are automatically deleted when the inventory document is deleted
         // MongoDB/Mongoose automatically removes all subdocuments (variants array) when the parent document is deleted
         await this.inventoryModel.findByIdAndDelete(id);
         deletedCount++;

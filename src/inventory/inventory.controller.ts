@@ -481,8 +481,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async remove(@Param('id') id: string, @Request() req) {
-    const sellerId =
-      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
     await this.inventoryService.remove(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
