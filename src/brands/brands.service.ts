@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Brand, BrandDocument } from './entities/brand.entity';
 import { Product, ProductDocument } from '../products/entities/product.entity';
 import { CreateBrandDto } from './dto/create-brand.dto';
@@ -51,40 +51,50 @@ export class BrandService {
       .sort({ sortOrder: 1, priority: 1, createdAt: -1 })
       .lean();
 
-    // Get all brand IDs from the current page
-    const brandIds = brands.map((brand) => brand._id);
+    // Count products for each brand
+    // Use Promise.all to count products for all brands in parallel
+    const productCountPromises = brands.map(async (brand: any) => {
+      const brandId =
+        brand._id instanceof Types.ObjectId
+          ? brand._id
+          : new Types.ObjectId(brand._id);
+      const brandIdStr = brand._id.toString();
 
-    // Count products for each brand using aggregation
-    const productCounts = await this.productModel.aggregate([
-      {
-        $match: {
-          brand: { $in: brandIds },
-        },
-      },
-      {
-        $group: {
-          _id: '$brand',
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+      // Count products with this brand ID
+      // Try matching both ObjectId and string formats
+      const count = await this.productModel.countDocuments({
+        $or: [{ brand: brandId }, { brand: brandIdStr }, { brand: brand._id }],
+      });
 
-    // Create a map of brand ID to product count for quick lookup
-    const productCountMap = new Map(
-      productCounts.map((item) => [item._id.toString(), item.count]),
-    );
+      return {
+        brandId: brandIdStr,
+        count,
+      };
+    });
 
-    const data = brands.map((brand) => ({
-      _id: brand._id,
-      name: brand.name,
-      nameAr: brand.nameAr,
-      logo: brand.logo,
-      priority: brand.priority,
-      status: brand.active,
-      products: productCountMap.get(brand._id.toString()) || 0,
-      totalOrders: 0,
-      totalSales: 0,
-    }));
+    const productCountResults = await Promise.all(productCountPromises);
+
+    // Create a map for quick lookup
+    const productCountMap = new Map<string, number>();
+    productCountResults.forEach((result) => {
+      productCountMap.set(result.brandId, result.count);
+    });
+
+    const data = brands.map((brand: any) => {
+      const brandKey = brand._id.toString();
+
+      return {
+        _id: brand._id,
+        name: brand.name,
+        nameAr: brand.nameAr,
+        logo: brand.logo,
+        priority: brand.priority,
+        status: brand.active,
+        products: productCountMap.get(brandKey) || 0,
+        totalOrders: 0,
+        totalSales: 0,
+      };
+    });
 
     return { data, total };
   }
