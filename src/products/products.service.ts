@@ -89,7 +89,13 @@ export class ProductsService {
       shipping: dto.shipping || null,
       specifications: dto.specifications || [],
       relatedProducts: dto.relations?.relatedProducts || [],
-      crossSellingProducts: dto.relations?.crossSellingProducts || [],
+      crossSellingProducts: dto.relations?.crossSellingProducts
+        ? dto.relations.crossSellingProducts.map((item) => ({
+            productId: item.productId,
+            price: item.price,
+            type: item.type,
+          }))
+        : [],
       active: true,
     };
 
@@ -174,7 +180,7 @@ export class ProductsService {
       .populate('store', 'name address')
       .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'nameEn nameAr originalPrice')
-      .populate('crossSellingProducts', 'nameEn nameAr originalPrice')
+      .populate('crossSellingProducts.productId', 'nameEn nameAr originalPrice')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -193,7 +199,7 @@ export class ProductsService {
       .populate('store', 'name address storePhone storeEmail')
       .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'nameEn nameAr originalPrice featuredImages')
-      .populate('crossSellingProducts', 'nameEn nameAr originalPrice featuredImages')
+      .populate('crossSellingProducts.productId', 'nameEn nameAr originalPrice featuredImages')
       .lean();
 
     if (!product) {
@@ -314,7 +320,13 @@ export class ProductsService {
     // Relations
     if (dto.relations) {
       if (dto.relations.relatedProducts !== undefined) updateData.relatedProducts = dto.relations.relatedProducts;
-      if (dto.relations.crossSellingProducts !== undefined) updateData.crossSellingProducts = dto.relations.crossSellingProducts;
+      if (dto.relations.crossSellingProducts !== undefined) {
+        updateData.crossSellingProducts = dto.relations.crossSellingProducts.map((item) => ({
+          productId: item.productId,
+          price: item.price,
+          type: item.type,
+        }));
+      }
     }
 
     // Store
@@ -329,7 +341,7 @@ export class ProductsService {
       .populate('store', 'name address')
       .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'nameEn nameAr originalPrice featuredImages')
-      .populate('crossSellingProducts', 'nameEn nameAr originalPrice featuredImages')
+      .populate('crossSellingProducts.productId', 'nameEn nameAr originalPrice featuredImages')
       .lean();
 
     if (!product) {
@@ -352,7 +364,7 @@ export class ProductsService {
       .populate('store', 'name address')
       .populate('sellerId', 'firstName lastName brandName email')
       .populate('relatedProducts', 'nameEn nameAr originalPrice featuredImages')
-      .populate('crossSellingProducts', 'nameEn nameAr originalPrice featuredImages')
+      .populate('crossSellingProducts.productId', 'nameEn nameAr originalPrice featuredImages')
       .lean();
 
     if (!product) {

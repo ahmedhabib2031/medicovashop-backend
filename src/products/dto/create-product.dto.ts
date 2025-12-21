@@ -412,6 +412,35 @@ class MediaDto {
   productVideo?: ProductVideoDto;
 }
 
+// Cross Selling Product DTO
+class CrossSellingProductDto {
+  @ApiProperty({
+    example: '507f1f77bcf86cd799439017',
+    description: 'Cross-selling product ID',
+  })
+  @IsMongoId()
+  @IsNotEmpty()
+  productId: string;
+
+  @ApiProperty({
+    example: 50,
+    description: 'Price value (fixed amount or percentage)',
+  })
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  price: number;
+
+  @ApiProperty({
+    example: 'fixed',
+    description: 'Price type: fixed or percentage',
+    enum: ['fixed', 'percentage'],
+  })
+  @IsEnum(['fixed', 'percentage'])
+  @IsNotEmpty()
+  type: 'fixed' | 'percentage';
+}
+
 // Relations DTO
 class RelationsDto {
   @ApiProperty({
@@ -426,15 +455,27 @@ class RelationsDto {
   relatedProducts?: string[];
 
   @ApiProperty({
-    example: ['507f1f77bcf86cd799439017', '507f1f77bcf86cd799439018'],
-    description: 'Cross-selling product IDs',
-    type: [String],
+    example: [
+      {
+        productId: '507f1f77bcf86cd799439017',
+        price: 50,
+        type: 'fixed',
+      },
+      {
+        productId: '507f1f77bcf86cd799439018',
+        price: 10,
+        type: 'percentage',
+      },
+    ],
+    description: 'Cross-selling products with price and type',
+    type: [CrossSellingProductDto],
     required: false,
   })
   @IsOptional()
   @IsArray()
-  @IsMongoId({ each: true })
-  crossSellingProducts?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CrossSellingProductDto)
+  crossSellingProducts?: CrossSellingProductDto[];
 }
 
 // Main Create Product DTO

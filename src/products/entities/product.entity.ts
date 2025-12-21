@@ -165,8 +165,21 @@ export class Product {
   @Prop({ type: [Types.ObjectId], ref: 'Product', default: [] })
   relatedProducts: Types.ObjectId[]; // Related products
 
-  @Prop({ type: [Types.ObjectId], ref: 'Product', default: [] })
-  crossSellingProducts: Types.ObjectId[]; // Cross-selling products
+  @Prop({
+    type: [
+      {
+        productId: { type: Types.ObjectId, ref: 'Product', required: true },
+        price: { type: Number, required: true },
+        type: { type: String, enum: ['fixed', 'percentage'], required: true },
+      },
+    ],
+    default: [],
+  })
+  crossSellingProducts: {
+    productId: Types.ObjectId;
+    price: number;
+    type: 'fixed' | 'percentage';
+  }[]; // Cross-selling products with price and type
 
   // Status
   @Prop({ type: Boolean, default: true })
