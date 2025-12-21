@@ -3,7 +3,7 @@ import { Document, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type ProductInventoryDocument = ProductInventory & Document;
 
-@Schema({ timestamps: true, _id: false })
+@Schema({ timestamps: true })
 export class ProductInventoryVariant {
   @Prop({ required: true })
   size: string;

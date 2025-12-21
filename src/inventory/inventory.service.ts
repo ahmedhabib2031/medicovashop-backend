@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   ProductInventory,
   ProductInventoryDocument,
@@ -681,7 +681,7 @@ export class InventoryService {
 
   async updateVariant(
     inventoryId: string,
-    variantIndex: number,
+    variantId: string,
     variantData: {
       size?: string;
       colors?: string[];
@@ -704,15 +704,43 @@ export class InventoryService {
       }
     }
 
-    // Validate variant index
-    if (variantIndex < 0 || variantIndex >= inventory.variants.length) {
-      throw new BadRequestException('VARIANT_INDEX_OUT_OF_RANGE');
-    }
-
     // Get product for validation
     const product = await this.productModel.findById(inventory.productId);
     if (!product) {
       throw new NotFoundException('PRODUCT_NOT_FOUND');
+    }
+
+    // Find variant by _id or by index (for backward compatibility)
+    let variantIndex = -1;
+    let variantIdObj: Types.ObjectId | null = null;
+
+    // Try to parse as ObjectId
+    if (Types.ObjectId.isValid(variantId)) {
+      try {
+        variantIdObj = new Types.ObjectId(variantId);
+      } catch (e) {
+        // Invalid ObjectId format, will try as index
+      }
+    }
+
+    // Try to find by ObjectId first
+    if (variantIdObj) {
+      variantIndex = inventory.variants.findIndex(
+        (v: any) => v._id && v._id.toString() === variantIdObj.toString(),
+      );
+    }
+
+    // If not found by ObjectId, try as array index (for backward compatibility)
+    if (variantIndex === -1) {
+      const index = parseInt(variantId);
+      if (!isNaN(index) && index >= 0 && index < inventory.variants.length) {
+        variantIndex = index;
+      }
+    }
+
+    // Validate variant found
+    if (variantIndex === -1 || variantIndex >= inventory.variants.length) {
+      throw new BadRequestException('VARIANT_NOT_FOUND');
     }
 
     // Get the variant to update

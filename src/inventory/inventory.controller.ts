@@ -11,7 +11,6 @@ import {
   Request,
   HttpCode,
   HttpStatus,
-  BadRequestException,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
@@ -404,8 +403,9 @@ export class InventoryController {
   @ApiParam({ name: 'id', description: 'Inventory ID' })
   @ApiParam({
     name: 'variantId',
-    description: 'Variant index (0-based) in the variants array',
-    type: Number,
+    description:
+      'Variant ID (MongoDB ObjectId) or variant index (0-based) in the variants array',
+    type: String,
   })
   @ApiResponse({
     status: 200,
@@ -421,13 +421,9 @@ export class InventoryController {
   ) {
     const sellerId =
       req.user.role === UserRole.SELLER ? req.user.userId : undefined;
-    const variantIndex = parseInt(variantId);
-    if (isNaN(variantIndex)) {
-      throw new BadRequestException('Invalid variant ID');
-    }
     const inventory = await this.inventoryService.updateVariant(
       id,
-      variantIndex,
+      variantId,
       dto,
       sellerId,
     );
