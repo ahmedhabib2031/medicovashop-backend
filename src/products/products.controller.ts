@@ -205,6 +205,87 @@ export class ProductsController {
     );
   }
 
+  @Get('seller/my-products')
+  @Roles(UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Get seller products',
+    description: 'Get all products for the authenticated seller (Seller only)',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'subcategory', required: false, type: String })
+  @ApiQuery({ name: 'brand', required: false, type: String })
+  @ApiQuery({ name: 'store', required: false, type: String })
+  @ApiQuery({ name: 'active', required: false, type: Boolean })
+  @ApiQuery({ name: 'minPrice', required: false, type: Number })
+  @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Seller products fetched successfully' })
+  @ApiResponse({ status: 403, description: 'Access denied - Seller only' })
+  async getSellerProducts(
+    @Query('page') page,
+    @Query('limit') limit,
+    @Query('search') search,
+    @Query('category') category,
+    @Query('subcategory') subcategory,
+    @Query('brand') brand,
+    @Query('store') store,
+    @Query('active') active,
+    @Query('minPrice') minPrice,
+    @Query('maxPrice') maxPrice,
+    @Req() req,
+  ) {
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+
+    // Get seller ID from token
+    const sellerId = req.user.id || req.user.userId;
+    if (!sellerId) {
+      throw new ForbiddenException('Seller ID not found in token');
+    }
+
+    const query: any = {
+      page: pageNum,
+      limit: limitNum,
+      search,
+      category,
+      subcategory,
+      brand,
+      store,
+      sellerId, // Automatically filter by seller's ID
+    };
+
+    // Sellers can filter by active status to see all their products (active and inactive)
+    if (active !== undefined) {
+      query.active = active === 'true';
+    }
+
+    if (minPrice) {
+      query.minPrice = parseFloat(minPrice);
+    }
+    if (maxPrice) {
+      query.maxPrice = parseFloat(maxPrice);
+    }
+
+    const result = await this.productsService.findAll(query);
+    const totalPages = Math.ceil(result.total / limitNum);
+
+    const lang = this.getLang(req);
+
+    return formatResponse(
+      {
+        products: result.data,
+        total: result.total,
+        page: pageNum,
+        limit: limitNum,
+        next: pageNum < totalPages,
+        previous: pageNum > 1,
+      },
+      await this.i18n.t('product.FETCH_SUCCESS', { lang }),
+    );
+  }
+
   @Get(':id')
   @Public()
   @ApiOperation({
