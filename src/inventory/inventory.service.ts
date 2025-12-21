@@ -10,6 +10,7 @@ import {
   ProductInventoryDocument,
 } from './entities/product-inventory.entity';
 import { Product, ProductDocument } from '../products/entities/product.entity';
+import { User, UserDocument } from '../users/entities/user.entity';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
@@ -20,6 +21,7 @@ export class InventoryService {
     @InjectModel(ProductInventory.name)
     private inventoryModel: Model<ProductInventoryDocument>,
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   async create(
@@ -86,34 +88,161 @@ export class InventoryService {
     status?: string,
     minQuantity?: number,
     maxQuantity?: number,
+    sellerStatus?: string,
+    qaStatus?: string,
+    brandId?: string,
+    categoryId?: string,
+    subcategoryId?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    minRating?: number,
   ) {
     const skip = (page - 1) * limit;
     const query: any = {};
+
+    // Build product filter to apply before filtering inventory
+    const productFilter: any = {};
 
     if (productId) {
       query.productId = productId;
     }
 
+    // Filter by brand
+    if (brandId) {
+      productFilter.brand = brandId;
+    }
+
+    // Filter by category
+    if (categoryId) {
+      productFilter.category = categoryId;
+    }
+
+    // Filter by subcategory
+    if (subcategoryId) {
+      productFilter.subcategory = subcategoryId;
+    }
+
+    // Filter by QA status (if qaStatus field exists on Product)
+    if (qaStatus) {
+      productFilter.qaStatus = qaStatus;
+    }
+
+    // Filter by price range
+    // Use salePrice if available, otherwise use originalPrice
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const priceFilter: any = {
+        $or: [
+          // Products with salePrice in range
+          {
+            salePrice: {
+              ...(minPrice !== undefined && { $gte: minPrice }),
+              ...(maxPrice !== undefined && { $lte: maxPrice }),
+              $ne: null,
+            },
+          },
+          // Products without salePrice, check originalPrice
+          {
+            $and: [
+              { $or: [{ salePrice: null }, { salePrice: { $exists: false } }] },
+              {
+                originalPrice: {
+                  ...(minPrice !== undefined && { $gte: minPrice }),
+                  ...(maxPrice !== undefined && { $lte: maxPrice }),
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      if (productFilter.$or) {
+        // Combine with existing $or (from search)
+        productFilter.$and = [{ $or: productFilter.$or }, priceFilter];
+        delete productFilter.$or;
+      } else {
+        Object.assign(productFilter, priceFilter);
+      }
+    }
+
+    // Filter by rating (if rating field exists on Product)
+    if (minRating !== undefined) {
+      productFilter.rating = { $gte: minRating };
+    }
+
+    // Filter by seller status (active/inactive)
+    if (sellerStatus) {
+      const isActive = sellerStatus === 'active';
+      const activeSellers = await this.userModel
+        .find({ role: 'seller', active: isActive })
+        .select('_id');
+      const sellerIds = activeSellers.map((s) => s._id);
+      productFilter.sellerId = { $in: sellerIds };
+    }
+
+    // Apply sellerId filter if provided (for seller role)
     if (sellerId) {
-      // Find products owned by seller, then filter inventory
+      if (productFilter.sellerId) {
+        // Combine with existing sellerId filter
+        const existingSellerIds = Array.isArray(productFilter.sellerId.$in)
+          ? productFilter.sellerId.$in
+          : [productFilter.sellerId];
+        productFilter.sellerId = {
+          $in: existingSellerIds.filter(
+            (id) => id.toString() === sellerId.toString(),
+          ),
+        };
+      } else {
+        productFilter.sellerId = sellerId;
+      }
+    }
+
+    // Apply product filters to get product IDs
+    if (Object.keys(productFilter).length > 0 || search) {
+      const searchFilter: any = { ...productFilter };
+
+      if (search) {
+        searchFilter.$or = [
+          { nameEn: { $regex: search, $options: 'i' } },
+          { nameAr: { $regex: search, $options: 'i' } },
+        ];
+      }
+
+      const products = await this.productModel.find(searchFilter).select('_id');
+      const productIds = products.map((p) => p._id);
+
+      if (productIds.length === 0) {
+        // No products match the filter, return empty result
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
+
+      // Combine with existing productId filter
+      if (query.productId) {
+        if (query.productId.$in) {
+          query.productId.$in = query.productId.$in.filter((id: any) =>
+            productIds.some((pid) => pid.toString() === id.toString()),
+          );
+        } else {
+          query.productId = {
+            $in: productIds.filter(
+              (pid) => pid.toString() === query.productId.toString(),
+            ),
+          };
+        }
+      } else {
+        query.productId = { $in: productIds };
+      }
+    } else if (sellerId) {
+      // Legacy sellerId filter (if no other product filters)
       const sellerProducts = await this.productModel
         .find({ sellerId })
         .select('_id');
       const productIds = sellerProducts.map((p) => p._id);
-      query.productId = { $in: productIds };
-    }
-
-    if (search) {
-      // Search in product name via populate
-      const products = await this.productModel
-        .find({
-          $or: [
-            { nameEn: { $regex: search, $options: 'i' } },
-            { nameAr: { $regex: search, $options: 'i' } },
-          ],
-        })
-        .select('_id');
-      const productIds = products.map((p) => p._id);
       query.productId = { $in: productIds };
     }
 
@@ -548,6 +677,84 @@ export class InventoryService {
       deletedCount,
       failedIds,
     };
+  }
+
+  async updateVariant(
+    inventoryId: string,
+    variantIndex: number,
+    variantData: {
+      size?: string;
+      colors?: string[];
+      quantity?: number;
+      attributes?: Record<string, any>;
+    },
+    sellerId?: string,
+  ): Promise<ProductInventory> {
+    const inventory = await this.inventoryModel.findById(inventoryId);
+    if (!inventory) {
+      throw new NotFoundException('INVENTORY_NOT_FOUND');
+    }
+
+    // Check if seller owns the product
+    if (sellerId) {
+      const product = await this.productModel.findById(inventory.productId);
+      if (!product || product.sellerId?.toString() !== sellerId) {
+        throw new BadRequestException('INVENTORY_NOT_OWNED_BY_SELLER');
+      }
+    }
+
+    // Validate variant index
+    if (variantIndex < 0 || variantIndex >= inventory.variants.length) {
+      throw new BadRequestException('VARIANT_INDEX_OUT_OF_RANGE');
+    }
+
+    // Get product for validation
+    const product = await this.productModel.findById(inventory.productId);
+    if (!product) {
+      throw new NotFoundException('PRODUCT_NOT_FOUND');
+    }
+
+    // Get the variant to update
+    const variant = inventory.variants[variantIndex];
+    const updatedVariant = {
+      size: variantData.size ?? variant.size,
+      colors: variantData.colors ?? variant.colors,
+      quantity: variantData.quantity ?? variant.quantity,
+      attributes: variantData.attributes ?? variant.attributes,
+    };
+
+    // Validate the updated variant
+    this.validateVariants([updatedVariant], product);
+
+    // Check for duplicate variant combinations (excluding current variant)
+    const otherVariants = inventory.variants.filter(
+      (_, index) => index !== variantIndex,
+    );
+    const allVariants = [...otherVariants, updatedVariant];
+    const variantKeys = allVariants.map(
+      (v) => `${v.size}:${v.colors.sort().join(',')}`,
+    );
+    const uniqueKeys = new Set(variantKeys);
+    if (variantKeys.length !== uniqueKeys.size) {
+      throw new BadRequestException('DUPLICATE_VARIANT_COMBINATIONS');
+    }
+
+    // Update the variant
+    inventory.variants[variantIndex] = updatedVariant as any;
+
+    // Recalculate total quantity
+    const totalQuantity = inventory.variants.reduce(
+      (sum, v) => sum + v.quantity,
+      0,
+    );
+
+    // Check if total quantity exceeds product stock
+    if (totalQuantity > product.stockQuantity) {
+      throw new BadRequestException('INVENTORY_EXCEEDS_PRODUCT_STOCK');
+    }
+
+    inventory.totalQuantity = totalQuantity;
+    return inventory.save();
   }
 
   private validateVariants(

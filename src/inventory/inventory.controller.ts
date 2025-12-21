@@ -11,11 +11,13 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateInventoryStatusDto } from './dto/update-inventory-status.dto';
+import { UpdateInventoryVariantDto } from './dto/update-inventory-variant.dto';
 import { BulkDeleteInventoryDto } from './dto/bulk-delete-inventory.dto';
 import { FilterInventoryDto } from './dto/filter-inventory.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -75,8 +77,8 @@ export class InventoryController {
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({ summary: 'Get all inventory items (Query Parameters)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'productId', required: false, type: String })
   @ApiQuery({
@@ -84,19 +86,76 @@ export class InventoryController {
     required: false,
     type: String,
     enum: ['in_stock', 'out_of_stock'],
-    description: 'Filter by inventory status (in_stock or out_of_stock)',
+    description: 'Filter by inventory stock status (in_stock or out_of_stock)',
   })
   @ApiQuery({
     name: 'minQuantity',
     required: false,
     type: Number,
     description: 'Minimum quantity filter',
+    example: 0,
   })
   @ApiQuery({
     name: 'maxQuantity',
     required: false,
     type: Number,
     description: 'Maximum quantity filter',
+    example: 100,
+  })
+  @ApiQuery({
+    name: 'sellerStatus',
+    required: false,
+    type: String,
+    enum: ['active', 'inactive'],
+    description: 'Filter by seller status (active or inactive)',
+  })
+  @ApiQuery({
+    name: 'qaStatus',
+    required: false,
+    type: String,
+    enum: ['approved', 'pending', 'rejected'],
+    description: 'Filter by QA status (approved, pending, or rejected)',
+  })
+  @ApiQuery({
+    name: 'brandId',
+    required: false,
+    type: String,
+    description: 'Filter by brand ID',
+  })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    description: 'Filter by category ID',
+  })
+  @ApiQuery({
+    name: 'subcategoryId',
+    required: false,
+    type: String,
+    description: 'Filter by subcategory ID',
+  })
+  @ApiQuery({
+    name: 'minPrice',
+    required: false,
+    type: Number,
+    description:
+      'Minimum price filter (uses originalPrice or salePrice if available)',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'maxPrice',
+    required: false,
+    type: Number,
+    description:
+      'Maximum price filter (uses originalPrice or salePrice if available)',
+    example: 1000,
+  })
+  @ApiQuery({
+    name: 'minRating',
+    required: false,
+    type: Number,
+    description: 'Minimum rating filter (0-5)',
+    example: 4,
   })
   @ApiResponse({
     status: 200,
@@ -110,6 +169,14 @@ export class InventoryController {
     @Query('status') status?: string,
     @Query('minQuantity') minQuantity?: string,
     @Query('maxQuantity') maxQuantity?: string,
+    @Query('sellerStatus') sellerStatus?: string,
+    @Query('qaStatus') qaStatus?: string,
+    @Query('brandId') brandId?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('subcategoryId') subcategoryId?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('minRating') minRating?: string,
     @Request() req?,
   ) {
     const sellerId =
@@ -123,6 +190,14 @@ export class InventoryController {
       status,
       minQuantity ? parseFloat(minQuantity) : undefined,
       maxQuantity ? parseFloat(maxQuantity) : undefined,
+      sellerStatus,
+      qaStatus,
+      brandId,
+      categoryId,
+      subcategoryId,
+      minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice ? parseFloat(maxPrice) : undefined,
+      minRating ? parseFloat(minRating) : undefined,
     );
     const lang = this.getLang(req);
     return formatResponse(
@@ -320,6 +395,46 @@ export class InventoryController {
     return formatResponse(
       inventory,
       await this.i18n.t('inventory.INVENTORY_STATUS_UPDATED', { lang }),
+    );
+  }
+
+  @Patch(':id/variant/:variantId')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({ summary: 'Update a specific variant in inventory' })
+  @ApiParam({ name: 'id', description: 'Inventory ID' })
+  @ApiParam({
+    name: 'variantId',
+    description: 'Variant index (0-based) in the variants array',
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Variant updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Inventory or variant not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async updateVariant(
+    @Param('id') id: string,
+    @Param('variantId') variantId: string,
+    @Body() dto: UpdateInventoryVariantDto,
+    @Request() req,
+  ) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const variantIndex = parseInt(variantId);
+    if (isNaN(variantIndex)) {
+      throw new BadRequestException('Invalid variant ID');
+    }
+    const inventory = await this.inventoryService.updateVariant(
+      id,
+      variantIndex,
+      dto,
+      sellerId,
+    );
+    const lang = this.getLang(req);
+    return formatResponse(
+      inventory,
+      await this.i18n.t('inventory.VARIANT_UPDATED', { lang }),
     );
   }
 
