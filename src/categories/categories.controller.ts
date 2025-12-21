@@ -7,6 +7,7 @@ import { UserRole } from 'src/users/entities/user.entity';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { JwtAuthGuard } from 'src/auth/guards';
+import { Public } from 'src/auth/public.decorator';
 import { formatResponse } from 'src/common/utils/response.util';
 
 @ApiTags('Categories')
@@ -47,7 +48,8 @@ export class CategoryController {
 
 
   @Get()
-  @ApiOperation({ summary: 'Get all categories', description: 'Get paginated list of categories with optional search' })
+  @Public()
+  @ApiOperation({ summary: 'Get all categories', description: 'Get paginated list of categories with optional search (Public endpoint)' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10, description: 'Items per page' })
   @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term' })

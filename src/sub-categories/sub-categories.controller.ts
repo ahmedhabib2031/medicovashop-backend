@@ -6,6 +6,7 @@ import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { Public } from 'src/auth/public.decorator';
 import { UserRole } from 'src/users/entities/user.entity';
 import { formatResponse } from 'src/common/utils/response.util';
 
@@ -44,7 +45,8 @@ export class SubCategoryController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all subcategories', description: 'Get paginated list of subcategories with optional filters' })
+  @Public()
+  @ApiOperation({ summary: 'Get all subcategories', description: 'Get paginated list of subcategories with optional filters (Public endpoint)' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String })

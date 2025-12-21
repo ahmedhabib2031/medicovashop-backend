@@ -10,6 +10,7 @@ import { UpdateBrandDto, UpdateBrandStatusDto } from './dto/update-brand.dto';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { Public } from 'src/auth/public.decorator';
 import { UserRole } from 'src/users/entities/user.entity';
 import { I18nService } from 'nestjs-i18n';
 import { formatResponse } from 'src/common/utils/response.util';
@@ -44,6 +45,8 @@ export class BrandController {
   }
 
   @Get()
+  @Public()
+  @ApiOperation({ summary: 'Get all brands', description: 'Get all brands with pagination and search (Public endpoint)' })
   async findAll(@Query('page') page, @Query('limit') limit, @Query('search') search, @Req() req) {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
