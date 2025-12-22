@@ -453,16 +453,32 @@ export class ProductsController {
   })
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Access denied - Sellers can only delete their own products' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async remove(@Param('id') id: string, @Req() req) {
     // If seller, ensure they can only delete their own products
     if (req.user.role === UserRole.SELLER) {
       const product = await this.productsService.findOne(id);
+      const sellerId = req.user.id || req.user.userId;
+      
+      // Check both sellerId and createdById fields
       const productSellerId =
         (product as any).sellerId?._id?.toString() ||
         (product as any).sellerId?.toString();
-      if (!productSellerId || productSellerId !== req.user.id) {
-        throw new ForbiddenException('Access denied');
+      const productCreatedById =
+        (product as any).createdById?._id?.toString() ||
+        (product as any).createdById?.toString();
+      const productCreatedBy = (product as any).createdBy;
+
+      // Seller can only delete if:
+      // 1. product.sellerId matches seller's ID, OR
+      // 2. product.createdById matches seller's ID AND createdBy === 'seller'
+      const canDelete =
+        (productSellerId && productSellerId === sellerId) ||
+        (productCreatedById === sellerId && productCreatedBy === 'seller');
+
+      if (!canDelete) {
+        throw new ForbiddenException('Access denied: You can only delete your own products');
       }
     }
 
