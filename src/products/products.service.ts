@@ -137,10 +137,6 @@ export class ProductsService {
       filter.brand = query.brand;
     }
 
-    if (query.sellerId) {
-      filter.sellerId = query.sellerId;
-    }
-
     if (query.active !== undefined) {
       filter.active = query.active;
     }
@@ -156,10 +152,18 @@ export class ProductsService {
       }
     }
 
-    // Search filter
+    // Seller filter - filter by sellerId OR createdById where createdBy is 'seller'
+    if (query.sellerId) {
+      filter.$or = [
+        { sellerId: query.sellerId },
+        { createdById: query.sellerId, createdBy: 'seller' },
+      ];
+    }
+
+    // Search filter - combine with seller filter if both exist
     if (query.search) {
       const regex = new RegExp(query.search, 'i');
-      filter.$or = [
+      const searchConditions = [
         { nameEn: regex },
         { nameAr: regex },
         { sku: regex },
@@ -167,6 +171,18 @@ export class ProductsService {
         { descriptionEn: regex },
         { descriptionAr: regex },
       ];
+
+      // If seller filter exists, combine with AND logic
+      if (query.sellerId && filter.$or) {
+        filter.$and = [
+          { $or: filter.$or }, // Seller conditions
+          { $or: searchConditions }, // Search conditions
+        ];
+        delete filter.$or;
+      } else {
+        // No seller filter, just use search
+        filter.$or = searchConditions;
+      }
     }
 
     const total = await this.productModel.countDocuments(filter);

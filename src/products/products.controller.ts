@@ -220,7 +220,11 @@ export class ProductsController {
 
     // If authenticated and seller, only show their products (enforce sellerId filter)
     if (req.user?.role === UserRole.SELLER) {
-      query.sellerId = req.user.id;
+      // Get seller ID from token (try both id and userId fields)
+      const sellerId = req.user.id || req.user.userId;
+      if (sellerId) {
+        query.sellerId = sellerId;
+      }
       // Sellers can see all their products (active and inactive) for management
       if (active !== undefined) {
         query.active = active === 'true';

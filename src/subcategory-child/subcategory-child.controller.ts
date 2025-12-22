@@ -22,6 +22,7 @@ import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { Public } from 'src/auth/public.decorator';
 import { UserRole } from 'src/users/entities/user.entity';
 import { formatResponse } from 'src/common/utils/response.util';
 
@@ -57,6 +58,7 @@ export class SubcategoryChildController {
   }
 
   @Get()
+  @Public()
   async findAll(
     @Query('page') page: string,
     @Query('limit') limit: string,
@@ -91,6 +93,7 @@ export class SubcategoryChildController {
   }
 
   @Get(':id')
+  @Public()
   async findOne(@Param('id') id: string, @Req() req) {
     const child = await this.subcategoryChildService.findOne(id);
     const lang = this.getLang(req);
