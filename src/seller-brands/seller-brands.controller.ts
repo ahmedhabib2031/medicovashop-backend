@@ -292,6 +292,49 @@ export class SellerBrandsController {
       await this.i18n.t('sellerBrand.DELETE_SUCCESS', { lang }),
     );
   }
+
+  @Delete()
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Bulk delete seller brands',
+    description:
+      'Delete multiple brands at once. Admin can delete any, Seller can only delete their own brands.',
+  })
+  @ApiQuery({
+    name: 'ids',
+    required: true,
+    type: String,
+    description:
+      'Comma-separated list of brand IDs to delete (e.g. id1,id2,id3)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Brands deleted successfully',
+  })
+  async bulkRemove(@Query('ids') ids: string, @Req() req) {
+    const idList = ids
+      ?.split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (!idList.length) {
+      throw new BadRequestException('No brand IDs provided');
+    }
+
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+
+    const result = await this.sellerBrandsService.removeMany(idList, sellerId);
+
+    const lang = this.getLang(req);
+    return formatResponse(
+      {
+        deletedCount: result.deletedCount,
+        ids: idList,
+      },
+      await this.i18n.t('sellerBrand.DELETE_SUCCESS', { lang }),
+    );
+  }
 }
 
 

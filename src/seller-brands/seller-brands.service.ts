@@ -182,6 +182,38 @@ export class SellerBrandsService {
     await this.sellerBrandModel.findByIdAndDelete(id);
     return { deleted: true };
   }
+
+  async removeMany(
+    ids: string[],
+    sellerId?: string,
+  ): Promise<{ deletedCount: number }> {
+    if (!ids || !ids.length) {
+      throw new BadRequestException('No brand IDs provided');
+    }
+
+    // If seller, ensure they own all brands they are trying to delete
+    if (sellerId) {
+      const brands = await this.sellerBrandModel
+        .find({ _id: { $in: ids } })
+        .select('sellerId')
+        .lean();
+
+      if (brands.length !== ids.length) {
+        throw new NotFoundException('One or more brands not found');
+      }
+
+      const unauthorized = brands.some(
+        (brand) => brand.sellerId.toString() !== sellerId,
+      );
+
+      if (unauthorized) {
+        throw new BadRequestException('You can only delete your own brands');
+      }
+    }
+
+    const result = await this.sellerBrandModel.deleteMany({ _id: { $in: ids } });
+    return { deletedCount: result.deletedCount || 0 };
+  }
 }
 
 
