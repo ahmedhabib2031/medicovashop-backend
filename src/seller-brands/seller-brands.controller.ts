@@ -140,14 +140,48 @@ export class SellerBrandsController {
   @Roles(UserRole.SELLER)
   @ApiOperation({
     summary: 'Get seller own brands',
-    description: 'Get all brands for the current seller (Seller only)',
+    description:
+      'Get all brands for the current seller with pagination, search, and optional status filter (Seller only)',
   })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, enum: BrandStatus })
   @ApiResponse({ status: 200, description: 'Brands fetched successfully' })
-  async getMyBrands(@Req() req) {
-    const brands = await this.sellerBrandsService.findBySellerId(req.user.id);
+  async getMyBrands(
+    @Query('page') page,
+    @Query('limit') limit,
+    @Query('search') search,
+    @Query('status') status,
+    @Req() req,
+  ) {
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+
+    const query: any = {
+      page: pageNum,
+      limit: limitNum,
+      search,
+      sellerId: req.user.id,
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const result = await this.sellerBrandsService.findAll(query);
+    const totalPages = Math.ceil(result.total / limitNum);
+
     const lang = this.getLang(req);
     return formatResponse(
-      brands,
+      {
+        brands: result.data,
+        total: result.total,
+        page: pageNum,
+        limit: limitNum,
+        next: pageNum < totalPages,
+        previous: pageNum > 1,
+      },
       await this.i18n.t('sellerBrand.FETCH_SUCCESS', { lang }),
     );
   }
