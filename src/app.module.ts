@@ -29,6 +29,7 @@ import { CustomerAddressesModule } from './customer-addresses/customer-addresses
 import { SellerBrandsModule } from './seller-brands/seller-brands.module';
 import { SellerWishlistsModule } from './seller-wishlists/seller-wishlists.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { ProductCollectionModule } from './product-collection/product-collection.module';
 import { ConfigModule } from '@nestjs/config';
 import { UploadModule } from './upload/upload.module';
 
@@ -86,6 +87,7 @@ import * as path from 'path';
     SellerBrandsModule,
     SellerWishlistsModule,
     InventoryModule,
+    ProductCollectionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
