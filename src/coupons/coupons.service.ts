@@ -254,4 +254,65 @@ export class DiscountsService {
     await this.discountModel.findByIdAndDelete(id);
     return { message: 'Discount deleted successfully' };
   }
+
+  async updateStatus(
+    id: string,
+    active: boolean,
+    sellerId?: string,
+  ): Promise<Discount> {
+    const discount = await this.discountModel.findById(id);
+    if (!discount) throw new NotFoundException('Discount not found');
+
+    // If seller is updating, ensure they own this discount
+    if (sellerId && discount.sellerId && discount.sellerId.toString() !== sellerId) {
+      throw new BadRequestException('You can only update your own discounts');
+    }
+
+    const updated = await this.discountModel
+      .findByIdAndUpdate(id, { active }, { new: true })
+      .populate('sellerId', 'firstName lastName brandName email')
+      .populate('productIds', 'productName productNameAr price')
+      .populate('customerIds', 'firstName lastName email')
+      .exec();
+
+    return updated;
+  }
+
+  async removeMany(
+    ids: string[],
+    sellerId?: string,
+  ): Promise<{ deletedCount: number }> {
+    if (!ids || !ids.length) {
+      throw new BadRequestException('No discount IDs provided');
+    }
+
+    // If seller, ensure they own all discounts they are trying to delete
+    if (sellerId) {
+      const discounts = await this.discountModel
+        .find({ _id: { $in: ids } })
+        .select('sellerId')
+        .lean();
+
+      if (discounts.length !== ids.length) {
+        throw new NotFoundException('One or more discounts not found');
+      }
+
+      const unauthorized = discounts.some(
+        (discount) =>
+          discount.sellerId &&
+          discount.sellerId.toString() !== sellerId,
+      );
+
+      if (unauthorized) {
+        throw new BadRequestException(
+          'You can only delete your own discounts',
+        );
+      }
+    }
+
+    const result = await this.discountModel.deleteMany({
+      _id: { $in: ids },
+    });
+    return { deletedCount: result.deletedCount || 0 };
+  }
 }

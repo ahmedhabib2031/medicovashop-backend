@@ -4,5 +4,6 @@
     "DISCOUNT_FETCHED": "تم جلب الخصم بنجاح",
     "DISCOUNT_UPDATED": "تم تحديث الخصم بنجاح",
     "DISCOUNT_DELETED": "تم حذف الخصم بنجاح",
+    "STATUS_UPDATE_SUCCESS": "تم تحديث حالة الخصم بنجاح",
     "CODE_GENERATED": "تم إنشاء رمز الخصم بنجاح"
 }

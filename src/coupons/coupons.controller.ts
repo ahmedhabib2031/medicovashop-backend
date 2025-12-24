@@ -10,6 +10,8 @@ import {
   Req,
   Query,
   ForbiddenException,
+  BadRequestException,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,6 +24,7 @@ import {
 import { DiscountsService } from './coupons.service';
 import { CreateDiscountDto, DiscountMethod } from './dto/create-coupon.dto';
 import { UpdateDiscountDto } from './dto/update-coupon.dto';
+import { UpdateDiscountStatusDto } from './dto/update-discount-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -228,6 +231,80 @@ export class DiscountsController {
     const lang = this.getLang(req);
     return formatResponse(
       null,
+      await this.i18n.t('discount.DISCOUNT_DELETED', { lang }),
+    );
+  }
+
+  @Patch(':id/status')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Update discount status',
+    description: 'Update discount active status (Admin can update any, Seller can only update their own)',
+  })
+  @ApiParam({ name: 'id', description: 'Discount ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Discount status updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Discount not found' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateDiscountStatusDto,
+    @Req() req,
+  ) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+    const discount = await this.discountsService.updateStatus(
+      id,
+      dto.active,
+      sellerId,
+    );
+    const lang = this.getLang(req);
+    return formatResponse(
+      discount,
+      await this.i18n.t('discount.STATUS_UPDATE_SUCCESS', { lang }),
+    );
+  }
+
+  @Delete()
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Bulk delete discounts',
+    description:
+      'Delete multiple discounts at once. Admin can delete any, Seller can only delete their own discounts.',
+  })
+  @ApiQuery({
+    name: 'ids',
+    required: true,
+    type: String,
+    description:
+      'Comma-separated list of discount IDs to delete (e.g. id1,id2,id3)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Discounts deleted successfully',
+  })
+  async bulkRemove(@Query('ids') ids: string, @Req() req) {
+    const idList = ids
+      ?.split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (!idList.length) {
+      throw new BadRequestException('No discount IDs provided');
+    }
+
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+
+    const result = await this.discountsService.removeMany(idList, sellerId);
+
+    const lang = this.getLang(req);
+    return formatResponse(
+      {
+        deletedCount: result.deletedCount,
+        ids: idList,
+      },
       await this.i18n.t('discount.DISCOUNT_DELETED', { lang }),
     );
   }
