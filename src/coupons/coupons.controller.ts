@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,7 +33,6 @@ import { formatResponse } from '../common/utils/response.util';
 @ApiBearerAuth('JWT-auth')
 @Controller('coupons')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
 export class DiscountsController {
   constructor(
     private readonly discountsService: DiscountsService,
@@ -45,13 +45,22 @@ export class DiscountsController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Create a new discount/coupon',
-    description: 'Create a new discount with all configuration options. Discount code will be auto-generated if method is discount_code and code is not provided.',
+    description: 'Create a new discount with all configuration options. Discount code will be auto-generated if method is discount_code and code is not provided. Seller ID is automatically extracted from token for sellers, or can be specified by admin.',
   })
   @ApiResponse({ status: 201, description: 'Discount created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid request data or discount code already exists' })
   async create(@Body() dto: CreateDiscountDto, @Req() req) {
+    // If seller is creating, automatically set sellerId from token
+    if (req.user.role === UserRole.SELLER) {
+      dto.sellerId = req.user.id;
+    } else if (req.user.role === UserRole.ADMIN) {
+      // Admin can optionally provide sellerId, but it's not required
+      // If not provided, discount will be global (no sellerId)
+    }
+
     const discount = await this.discountsService.create(dto);
     const lang = this.getLang(req);
     return formatResponse(
@@ -61,6 +70,7 @@ export class DiscountsController {
   }
 
   @Get('generate-code')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Generate random discount code',
     description: 'Generate a unique random discount code that can be used when creating a discount with discount_code method',
@@ -76,9 +86,10 @@ export class DiscountsController {
   }
 
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Get all discounts/coupons',
-    description: 'Get all discounts with pagination, search, and filtering options',
+    description: 'Get all discounts with pagination, search, and filtering options (Admin sees all, Seller sees only their discounts)',
   })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -106,6 +117,11 @@ export class DiscountsController {
       active: activeBool,
     };
 
+    // If seller, only show their discounts
+    if (req.user.role === UserRole.SELLER) {
+      query.sellerId = req.user.id;
+    }
+
     const result = await this.discountsService.findAll(query);
     const totalPages = Math.ceil(result.total / limitNum);
 
@@ -125,6 +141,7 @@ export class DiscountsController {
   }
 
   @Get('code/:code')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Get discount by code',
     description: 'Get discount details by discount code (for validation at checkout)',
@@ -142,15 +159,27 @@ export class DiscountsController {
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Get discount by ID',
-    description: 'Get a specific discount by its ID',
+    description: 'Get a specific discount by its ID (Admin can access any, Seller can only access their own)',
   })
   @ApiParam({ name: 'id', description: 'Discount ID' })
   @ApiResponse({ status: 200, description: 'Discount fetched successfully' })
   @ApiResponse({ status: 404, description: 'Discount not found' })
   async findOne(@Param('id') id: string, @Req() req) {
     const discount = await this.discountsService.findOne(id);
+
+    // If seller, ensure they can only access their own discount
+    if (req.user.role === UserRole.SELLER) {
+      const discountSellerId =
+        (discount as any).sellerId?._id?.toString() ||
+        (discount as any).sellerId?.toString();
+      if (discountSellerId && discountSellerId !== req.user.id) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
     const lang = this.getLang(req);
     return formatResponse(
       discount,
@@ -159,9 +188,10 @@ export class DiscountsController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Update discount',
-    description: 'Update an existing discount',
+    description: 'Update an existing discount (Admin can update any, Seller can only update their own)',
   })
   @ApiParam({ name: 'id', description: 'Discount ID' })
   @ApiResponse({ status: 200, description: 'Discount updated successfully' })
@@ -172,7 +202,9 @@ export class DiscountsController {
     @Body() dto: UpdateDiscountDto,
     @Req() req,
   ) {
-    const discount = await this.discountsService.update(id, dto);
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+    const discount = await this.discountsService.update(id, dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
       discount,
@@ -181,15 +213,18 @@ export class DiscountsController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Delete discount',
-    description: 'Delete a discount permanently',
+    description: 'Delete a discount permanently (Admin can delete any, Seller can only delete their own)',
   })
   @ApiParam({ name: 'id', description: 'Discount ID' })
   @ApiResponse({ status: 200, description: 'Discount deleted successfully' })
   @ApiResponse({ status: 404, description: 'Discount not found' })
   async remove(@Param('id') id: string, @Req() req) {
-    await this.discountsService.remove(id);
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+    await this.discountsService.remove(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
       null,

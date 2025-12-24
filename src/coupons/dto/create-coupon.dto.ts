@@ -41,6 +41,15 @@ export enum Eligibility {
 
 export class CreateDiscountDto {
   @ApiProperty({
+    example: '507f1f77bcf86cd799439011',
+    description: 'Seller ID (MongoDB ObjectId) - Required for Admin, auto-set from token for Seller',
+    required: false,
+  })
+  @IsOptional()
+  @IsMongoId({ message: 'Invalid seller ID' })
+  sellerId?: string;
+
+  @ApiProperty({
     example: 'Summer Sale 2024',
     description: 'Discount name',
   })

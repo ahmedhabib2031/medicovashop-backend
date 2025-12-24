@@ -128,12 +128,18 @@ export class DiscountsService {
     search?: string;
     method?: DiscountMethod;
     active?: boolean;
+    sellerId?: string;
   }): Promise<{ data: Discount[]; total: number }> {
     const page = query?.page > 0 ? query.page : 1;
     const limit = query?.limit > 0 ? query.limit : 10;
     const skip = (page - 1) * limit;
 
     const filter: any = {};
+
+    // If sellerId is provided, filter by it
+    if (query?.sellerId) {
+      filter.sellerId = query.sellerId;
+    }
 
     if (query?.search) {
       filter.$or = [
@@ -154,6 +160,7 @@ export class DiscountsService {
 
     const discounts = await this.discountModel
       .find(filter)
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('productIds', 'productName productNameAr price')
       .populate('customerIds', 'firstName lastName email')
       .skip(skip)
@@ -167,6 +174,7 @@ export class DiscountsService {
   async findOne(id: string): Promise<Discount> {
     const discount = await this.discountModel
       .findById(id)
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('productIds', 'productName productNameAr price')
       .populate('customerIds', 'firstName lastName email')
       .exec();
@@ -177,6 +185,7 @@ export class DiscountsService {
   async findByCode(code: string): Promise<Discount> {
     const discount = await this.discountModel
       .findOne({ discountCode: code, active: true })
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('productIds', 'productName productNameAr price')
       .populate('customerIds', 'firstName lastName email')
       .exec();
@@ -184,9 +193,14 @@ export class DiscountsService {
     return discount;
   }
 
-  async update(id: string, dto: UpdateDiscountDto): Promise<Discount> {
+  async update(id: string, dto: UpdateDiscountDto, sellerId?: string): Promise<Discount> {
     const existing = await this.discountModel.findById(id);
     if (!existing) throw new NotFoundException('Discount not found');
+
+    // If seller is updating, ensure they own this discount
+    if (sellerId && existing.sellerId && existing.sellerId.toString() !== sellerId) {
+      throw new BadRequestException('You can only update your own discounts');
+    }
 
     // If updating discount code, check uniqueness
     if (dto.discountCode && dto.discountCode !== existing.discountCode) {
@@ -220,6 +234,7 @@ export class DiscountsService {
     const discount = await this.discountModel.findByIdAndUpdate(id, updateData, {
       new: true,
     })
+      .populate('sellerId', 'firstName lastName brandName email')
       .populate('productIds', 'productName productNameAr price')
       .populate('customerIds', 'firstName lastName email')
       .exec();
@@ -227,9 +242,16 @@ export class DiscountsService {
     return discount;
   }
 
-  async remove(id: string): Promise<{ message: string }> {
-    const result = await this.discountModel.findByIdAndDelete(id);
-    if (!result) throw new NotFoundException('Discount not found');
+  async remove(id: string, sellerId?: string): Promise<{ message: string }> {
+    const discount = await this.discountModel.findById(id);
+    if (!discount) throw new NotFoundException('Discount not found');
+
+    // If seller is deleting, ensure they own this discount
+    if (sellerId && discount.sellerId && discount.sellerId.toString() !== sellerId) {
+      throw new BadRequestException('You can only delete your own discounts');
+    }
+
+    await this.discountModel.findByIdAndDelete(id);
     return { message: 'Discount deleted successfully' };
   }
 }

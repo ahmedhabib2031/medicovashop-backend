@@ -11,6 +11,9 @@ export type DiscountDocument = Discount & Document;
 
 @Schema({ timestamps: true })
 export class Discount {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  sellerId: Types.ObjectId;
+
   @Prop({ required: true })
   discountName: string;
 
