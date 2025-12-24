@@ -184,6 +184,32 @@ export class ProductCollectionService {
     });
     return { deletedCount: result.deletedCount || 0 };
   }
+
+  async updateStatus(
+    id: string,
+    status: boolean,
+    sellerId?: string,
+  ): Promise<ProductCollection> {
+    const collection = await this.productCollectionModel.findById(id).lean();
+    if (!collection)
+      throw new NotFoundException('PRODUCT_COLLECTION_NOT_FOUND');
+
+    // If seller is updating, ensure they own this collection
+    if (sellerId && collection.sellerId.toString() !== sellerId) {
+      throw new BadRequestException(
+        'You can only update your own collections',
+      );
+    }
+
+    const updated = await this.productCollectionModel
+      .findByIdAndUpdate(id, { status }, { new: true })
+      .populate('sellerId', 'firstName lastName brandName email')
+      .populate('products', 'nameEn nameAr sku')
+      .populate('descriptiveData')
+      .lean();
+
+    return updated as ProductCollection;
+  }
 }
 
 

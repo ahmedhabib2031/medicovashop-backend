@@ -3,6 +3,7 @@
   "FETCH_SUCCESS": "Product collection fetched successfully",
   "UPDATE_SUCCESS": "Product collection updated successfully",
   "DELETE_SUCCESS": "Product collection deleted successfully",
+  "STATUS_UPDATE_SUCCESS": "Product collection status updated successfully",
   "CREATE_FAILED": "Failed to create product collection",
   "UPDATE_FAILED": "Failed to update product collection",
   "DELETE_FAILED": "Failed to delete product collection",

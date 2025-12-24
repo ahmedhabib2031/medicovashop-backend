@@ -11,6 +11,7 @@ import {
   BadRequestException,
   UseGuards,
   ForbiddenException,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,6 +24,7 @@ import {
 import { ProductCollectionService } from './product-collection.service';
 import { CreateProductCollectionDto } from './dto/create-product-collection.dto';
 import { UpdateProductCollectionDto } from './dto/update-product-collection.dto';
+import { UpdateCollectionStatusDto } from './dto/update-collection-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -274,6 +276,38 @@ export class ProductCollectionController {
     return formatResponse(
       null,
       await this.i18n.t('productCollection.DELETE_SUCCESS', { lang }),
+    );
+  }
+
+  @Patch(':id/status')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Update product collection status',
+    description:
+      'Update collection status (active/inactive). Admin can update any, Seller can only update their own.',
+  })
+  @ApiParam({ name: 'id', description: 'Collection ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection status updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Collection not found' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateCollectionStatusDto,
+    @Req() req,
+  ) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+    const collection = await this.productCollectionService.updateStatus(
+      id,
+      dto.status,
+      sellerId,
+    );
+    const lang = this.getLang(req);
+    return formatResponse(
+      collection,
+      await this.i18n.t('productCollection.STATUS_UPDATE_SUCCESS', { lang }),
     );
   }
 
