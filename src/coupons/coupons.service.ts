@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Discount, DiscountDocument } from './entities/coupon.entity';
-import { CreateDiscountDto, DiscountMethod } from './dto/create-coupon.dto';
+import { CreateDiscountDto, DiscountMethod, CouponType } from './dto/create-coupon.dto';
 import { UpdateDiscountDto } from './dto/update-coupon.dto';
 
 @Injectable()
@@ -127,8 +127,11 @@ export class DiscountsService {
     limit?: number;
     search?: string;
     method?: DiscountMethod;
+    discountType?: CouponType;
     active?: boolean;
     sellerId?: string;
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<{ data: Discount[]; total: number }> {
     const page = query?.page > 0 ? query.page : 1;
     const limit = query?.limit > 0 ? query.limit : 10;
@@ -152,8 +155,41 @@ export class DiscountsService {
       filter.method = query.method;
     }
 
+    if (query?.discountType) {
+      filter.discountType = query.discountType;
+    }
+
     if (query?.active !== undefined) {
       filter.active = query.active;
+    }
+
+    // Date filtering
+    if (query?.startDate) {
+      // Filter discounts that start on or before the provided startDate
+      // (discounts that have already started)
+      filter.startDate = { $lte: query.startDate };
+    }
+
+    if (query?.endDate) {
+      // Filter discounts that end on or after the provided endDate, or have no end date
+      // (discounts that haven't ended yet or don't have an end date)
+      const endDateFilter = {
+        $or: [
+          { endDate: { $gte: query.endDate } },
+          { endDate: null },
+        ],
+      };
+
+      // If we already have $or for search, use $and to combine
+      if (query?.search && filter.$or) {
+        filter.$and = [
+          { $or: filter.$or },
+          endDateFilter,
+        ];
+        delete filter.$or;
+      } else {
+        filter.$or = endDateFilter.$or;
+      }
     }
 
     const total = await this.discountModel.countDocuments(filter);

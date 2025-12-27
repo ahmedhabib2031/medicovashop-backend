@@ -22,7 +22,11 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { DiscountsService } from './coupons.service';
-import { CreateDiscountDto, DiscountMethod } from './dto/create-coupon.dto';
+import {
+  CreateDiscountDto,
+  DiscountMethod,
+  CouponType,
+} from './dto/create-coupon.dto';
 import { UpdateDiscountDto } from './dto/update-coupon.dto';
 import { UpdateDiscountStatusDto } from './dto/update-discount-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -98,14 +102,30 @@ export class DiscountsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'method', required: false, enum: DiscountMethod })
+  @ApiQuery({ name: 'discountType', required: false, enum: CouponType })
   @ApiQuery({ name: 'active', required: false, type: Boolean })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+    description: 'Filter discounts that start on or after this date (ISO format: YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+    description: 'Filter discounts that end on or before this date (ISO format: YYYY-MM-DD)',
+  })
   @ApiResponse({ status: 200, description: 'Discounts fetched successfully' })
   async findAll(
     @Query('page') page,
     @Query('limit') limit,
     @Query('search') search,
     @Query('method') method,
+    @Query('discountType') discountType,
     @Query('active') active,
+    @Query('startDate') startDate,
+    @Query('endDate') endDate,
     @Req() req,
   ) {
     const pageNum = parseInt(page) || 1;
@@ -117,7 +137,10 @@ export class DiscountsController {
       limit: limitNum,
       search,
       method,
+      discountType,
       active: activeBool,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
     };
 
     // If seller, only show their discounts
