@@ -28,7 +28,15 @@ export class SellerWishlistsService {
   async findBySellerId(sellerId: string): Promise<SellerWishlist> {
     let wishlist = await this.sellerWishlistModel
       .findOne({ sellerId })
-      .populate('products', 'productName productNameAr productTitle productTitleAr price salePrice productImages')
+      .populate({
+        path: 'products',
+        select: 'nameEn nameAr descriptionEn descriptionAr permalink sku originalPrice salePrice discountAmount discountPercantge featuredImages galleryImages active stockStatus stockQuantity brand category subcategory',
+        populate: [
+          { path: 'brand', select: 'nameEn nameAr' },
+          { path: 'category', select: 'name nameAr' },
+          { path: 'subcategory', select: 'name nameAr' },
+        ],
+      })
       .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
@@ -37,7 +45,15 @@ export class SellerWishlistsService {
       const newWishlist = await this.create(sellerId);
       wishlist = await this.sellerWishlistModel
         .findById((newWishlist as any)._id)
-        .populate('products', 'productName productNameAr productTitle productTitleAr price salePrice productImages')
+        .populate({
+          path: 'products',
+          select: 'nameEn nameAr descriptionEn descriptionAr permalink sku originalPrice salePrice discountAmount discountPercantge featuredImages galleryImages active stockStatus stockQuantity brand category subcategory',
+          populate: [
+            { path: 'brand', select: 'nameEn nameAr' },
+            { path: 'category', select: 'name nameAr' },
+            { path: 'subcategory', select: 'name nameAr' },
+          ],
+        })
         .populate('sellerId', 'firstName lastName brandName email')
         .lean();
     }
@@ -65,7 +81,15 @@ export class SellerWishlistsService {
 
     const wishlists = await this.sellerWishlistModel
       .find(filter)
-      .populate('products', 'productName productNameAr productTitle productTitleAr price salePrice productImages')
+      .populate({
+        path: 'products',
+        select: 'nameEn nameAr descriptionEn descriptionAr permalink sku originalPrice salePrice discountAmount discountPercantge featuredImages galleryImages active stockStatus stockQuantity brand category subcategory',
+        populate: [
+          { path: 'brand', select: 'nameEn nameAr' },
+          { path: 'category', select: 'name nameAr' },
+          { path: 'subcategory', select: 'name nameAr' },
+        ],
+      })
       .populate('sellerId', 'firstName lastName brandName email')
       .skip(skip)
       .limit(limit)
@@ -102,7 +126,15 @@ export class SellerWishlistsService {
 
     const updated = await this.sellerWishlistModel
       .findByIdAndUpdate(wishlist._id, { products: wishlist.products }, { new: true })
-      .populate('products', 'productName productNameAr productTitle productTitleAr price salePrice productImages')
+      .populate({
+        path: 'products',
+        select: 'nameEn nameAr descriptionEn descriptionAr permalink sku originalPrice salePrice discountAmount discountPercantge featuredImages galleryImages active stockStatus stockQuantity brand category subcategory',
+        populate: [
+          { path: 'brand', select: 'nameEn nameAr' },
+          { path: 'category', select: 'name nameAr' },
+          { path: 'subcategory', select: 'name nameAr' },
+        ],
+      })
       .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
@@ -130,7 +162,15 @@ export class SellerWishlistsService {
         { products: remainingProducts },
         { new: true },
       )
-      .populate('products', 'productName productNameAr productTitle productTitleAr price salePrice productImages')
+      .populate({
+        path: 'products',
+        select: 'nameEn nameAr descriptionEn descriptionAr permalink sku originalPrice salePrice discountAmount discountPercantge featuredImages galleryImages active stockStatus stockQuantity brand category subcategory',
+        populate: [
+          { path: 'brand', select: 'nameEn nameAr' },
+          { path: 'category', select: 'name nameAr' },
+          { path: 'subcategory', select: 'name nameAr' },
+        ],
+      })
       .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
@@ -145,7 +185,15 @@ export class SellerWishlistsService {
 
     const updated = await this.sellerWishlistModel
       .findByIdAndUpdate(wishlist._id, { products: [] }, { new: true })
-      .populate('products', 'productName productNameAr productTitle productTitleAr price salePrice productImages')
+      .populate({
+        path: 'products',
+        select: 'nameEn nameAr descriptionEn descriptionAr permalink sku originalPrice salePrice discountAmount discountPercantge featuredImages galleryImages active stockStatus stockQuantity brand category subcategory',
+        populate: [
+          { path: 'brand', select: 'nameEn nameAr' },
+          { path: 'category', select: 'name nameAr' },
+          { path: 'subcategory', select: 'name nameAr' },
+        ],
+      })
       .populate('sellerId', 'firstName lastName brandName email')
       .lean();
 
