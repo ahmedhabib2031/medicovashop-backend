@@ -72,9 +72,10 @@ export class DiscountsService {
       throw new BadRequestException('Percentage discount cannot exceed 100%');
     }
 
-    // Prepare discount data
+    // Prepare discount data - exclude discountCode initially
+    const { discountCode, ...restDto } = dto;
     const discountData: any = {
-      ...dto,
+      ...restDto,
       method,
       discountType: dto.discountType,
       discountValue: dto.discountValue,
@@ -86,10 +87,9 @@ export class DiscountsService {
 
     // Only include discountCode if method is discount_code
     if (method === DiscountMethod.DISCOUNT_CODE) {
-      discountData.discountCode = dto.discountCode;
-    } else {
-      discountData.discountCode = undefined;
+      discountData.discountCode = discountCode;
     }
+    // If method is not discount_code, don't include discountCode field at all
 
     // Handle appliesTo arrays
     if (dto.appliesTo === 'specific_products' && dto.productIds) {
