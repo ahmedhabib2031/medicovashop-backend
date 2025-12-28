@@ -107,7 +107,7 @@ export class InventoryController {
     description: 'Filter by product category ID (MongoDB ObjectId)',
   })
   @ApiQuery({
-    name: 'subCategoryId',
+    name: 'subcategoryId',
     required: false,
     type: String,
     description: 'Filter by product subcategory ID (MongoDB ObjectId)',
@@ -162,7 +162,7 @@ export class InventoryController {
     @Query('status') status?: string,
     @Query('brandId') brandId?: string,
     @Query('categoryId') categoryId?: string,
-    @Query('subCategoryId') subCategoryId?: string,
+    @Query('subcategoryId') subcategoryId?: string,
     @Query('productStatus') productStatus?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
@@ -185,7 +185,7 @@ export class InventoryController {
       qaStatus,
       brandId,
       categoryId,
-      subCategoryId,
+      subcategoryId,
       minPrice ? parseFloat(minPrice) : undefined,
       maxPrice ? parseFloat(maxPrice) : undefined,
       minRating ? parseFloat(minRating) : undefined,
