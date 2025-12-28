@@ -130,6 +130,24 @@ export class InventoryController {
     type: Number,
     description: 'Maximum product price filter (checks salePrice if available, otherwise originalPrice)',
   })
+  @ApiQuery({
+    name: 'sellerStatus',
+    required: false,
+    enum: ['active', 'inactive'],
+    description: 'Filter by seller status: active or inactive',
+  })
+  @ApiQuery({
+    name: 'qaStatus',
+    required: false,
+    type: String,
+    description: 'Filter by product QA status',
+  })
+  @ApiQuery({
+    name: 'minRating',
+    required: false,
+    type: Number,
+    description: 'Minimum product rating filter (products with rating >= minRating)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Inventory items retrieved successfully',
@@ -148,6 +166,9 @@ export class InventoryController {
     @Query('productStatus') productStatus?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
+    @Query('sellerStatus') sellerStatus?: string,
+    @Query('qaStatus') qaStatus?: string,
+    @Query('minRating') minRating?: string,
     @Request() req?,
   ) {
     const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
@@ -160,14 +181,14 @@ export class InventoryController {
       status,
       minQuantity ? parseInt(minQuantity) : undefined,
       maxQuantity ? parseInt(maxQuantity) : undefined,
-      undefined, // sellerStatus
-      undefined, // qaStatus
+      sellerStatus,
+      qaStatus,
       brandId,
       categoryId,
       subCategoryId,
       minPrice ? parseFloat(minPrice) : undefined,
       maxPrice ? parseFloat(maxPrice) : undefined,
-      undefined, // minRating
+      minRating ? parseFloat(minRating) : undefined,
       productStatus,
     );
     const lang = this.getLang(req);
