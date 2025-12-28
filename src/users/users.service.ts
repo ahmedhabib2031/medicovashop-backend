@@ -173,4 +173,20 @@ export class UsersService {
     delete obj.password;
     return obj as any;
   }
+
+  // Update seller root email (SellerContactEmail)
+  async updateSellerRootEmail(
+    sellerId: string,
+    newEmail: string,
+  ): Promise<Partial<User>> {
+    const user = await this.userModel.findByIdAndUpdate(
+      sellerId,
+      { SellerContactEmail: newEmail },
+      { new: true },
+    );
+    if (!user) throw new NotFoundException('Seller not found');
+    const obj = user.toObject();
+    delete obj.password;
+    return obj;
+  }
 }

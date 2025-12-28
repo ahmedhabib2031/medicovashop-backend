@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateSellerProfileDto } from './dto/update-seller-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateSellerRootEmailDto } from './dto/update-seller-root-email.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth('JWT-auth')
@@ -203,6 +204,36 @@ export class UsersController {
     const lang = this.getLang(req);
     return {
       message: await this.i18n.t('users.USER_DELETED', { lang }),
+    };
+  }
+
+  @Put('seller/root-email')
+  @Roles(UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Update seller root email',
+    description:
+      'Update seller root/contact email (SellerContactEmail field) (Seller only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Seller root email successfully updated',
+  })
+  @ApiResponse({ status: 404, description: 'Seller not found' })
+  @ApiResponse({ status: 400, description: 'Invalid email format' })
+  async updateSellerRootEmail(
+    @Req() req,
+    @Body() dto: UpdateSellerRootEmailDto,
+  ) {
+    const sellerId = req.user.id;
+    const updated = await this.usersService.updateSellerRootEmail(
+      sellerId,
+      dto.newEmail,
+    );
+
+    const lang = this.getLang(req);
+    return {
+      data: updated,
+      message: await this.i18n.t('users.SELLER_ROOT_EMAIL_UPDATED', { lang }),
     };
   }
 
