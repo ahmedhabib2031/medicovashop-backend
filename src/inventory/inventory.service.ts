@@ -161,13 +161,8 @@ export class InventoryService {
         ],
       };
 
-      if (productFilter.$or) {
-        // Combine with existing $or (from search)
-        productFilter.$and = [{ $or: productFilter.$or }, priceFilter];
-        delete productFilter.$or;
-      } else {
-        Object.assign(productFilter, priceFilter);
-      }
+      // Store price filter separately to combine with search later
+      productFilter._priceFilter = priceFilter;
     }
 
     // Filter by rating (if rating field exists on Product)
@@ -205,12 +200,32 @@ export class InventoryService {
     // Apply product filters to get product IDs
     if (Object.keys(productFilter).length > 0 || search) {
       const searchFilter: any = { ...productFilter };
+      
+      // Remove temporary price filter to handle it separately
+      const priceFilter = searchFilter._priceFilter;
+      delete searchFilter._priceFilter;
 
-      if (search) {
+      // Combine search and price filters properly
+      if (search && priceFilter) {
+        // Both search and price filter exist - combine with $and
+        searchFilter.$and = [
+          {
+            $or: [
+              { nameEn: { $regex: search, $options: 'i' } },
+              { nameAr: { $regex: search, $options: 'i' } },
+            ],
+          },
+          priceFilter,
+        ];
+      } else if (search) {
+        // Only search filter
         searchFilter.$or = [
           { nameEn: { $regex: search, $options: 'i' } },
           { nameAr: { $regex: search, $options: 'i' } },
         ];
+      } else if (priceFilter) {
+        // Only price filter
+        Object.assign(searchFilter, priceFilter);
       }
 
       const products = await this.productModel.find(searchFilter).select('_id');
@@ -228,16 +243,21 @@ export class InventoryService {
       }
 
       // Combine with existing productId filter
-      if (query.productId) {
-        if (query.productId.$in) {
-          query.productId.$in = query.productId.$in.filter((id: any) =>
-            productIds.some((pid) => pid.toString() === id.toString()),
-          );
+      if (productId) {
+        // If specific productId was provided, check if it's in the filtered results
+        const isInFiltered = productIds.some(
+          (pid) => pid.toString() === productId.toString(),
+        );
+        if (isInFiltered) {
+          query.productId = productId;
         } else {
-          query.productId = {
-            $in: productIds.filter(
-              (pid) => pid.toString() === query.productId.toString(),
-            ),
+          // Product doesn't match filters, return empty result
+          return {
+            data: [],
+            total: 0,
+            page,
+            limit,
+            totalPages: 0,
           };
         }
       } else {

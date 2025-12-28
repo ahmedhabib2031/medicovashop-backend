@@ -60,7 +60,7 @@ export class InventoryController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async create(@Body() dto: CreateInventoryDto, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     const inventory = await this.inventoryService.create(dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -171,7 +171,7 @@ export class InventoryController {
     @Query('minRating') minRating?: string,
     @Request() req?,
   ) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     const result = await this.inventoryService.findAll(
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 10,
@@ -208,7 +208,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async findByProductId(@Param('productId') productId: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     const inventory = await this.inventoryService.findByProductId(
       productId,
       sellerId,
@@ -230,7 +230,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async findOne(@Param('id') id: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     const inventory = await this.inventoryService.findOne(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -253,7 +253,7 @@ export class InventoryController {
     @Body() dto: UpdateInventoryDto,
     @Request() req,
   ) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     const inventory = await this.inventoryService.update(id, dto, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
@@ -276,7 +276,7 @@ export class InventoryController {
     @Body() dto: UpdateInventoryStatusDto,
     @Request() req,
   ) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     const inventory = await this.inventoryService.updateStatus(
       id,
       dto,
@@ -299,7 +299,7 @@ export class InventoryController {
   })
   @ApiResponse({ status: 404, description: 'Inventory not found' })
   async remove(@Param('id') id: string, @Request() req) {
-    const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
+    const sellerId = req.user.role === UserRole.SELLER ? req.user.id : undefined;
     await this.inventoryService.remove(id, sellerId);
     const lang = this.getLang(req);
     return formatResponse(
