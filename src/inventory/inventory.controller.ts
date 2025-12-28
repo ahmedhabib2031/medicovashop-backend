@@ -94,6 +94,42 @@ export class InventoryController {
     enum: ['in_stock', 'out_of_stock'],
     description: 'Filter by stock status: in_stock (quantity > 0) or out_of_stock (quantity <= 0)',
   })
+  @ApiQuery({
+    name: 'brandId',
+    required: false,
+    type: String,
+    description: 'Filter by product brand ID (MongoDB ObjectId)',
+  })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    description: 'Filter by product category ID (MongoDB ObjectId)',
+  })
+  @ApiQuery({
+    name: 'subCategoryId',
+    required: false,
+    type: String,
+    description: 'Filter by product subcategory ID (MongoDB ObjectId)',
+  })
+  @ApiQuery({
+    name: 'productStatus',
+    required: false,
+    enum: ['active', 'inactive'],
+    description: 'Filter by product status: active or inactive',
+  })
+  @ApiQuery({
+    name: 'minPrice',
+    required: false,
+    type: Number,
+    description: 'Minimum product price filter (checks salePrice if available, otherwise originalPrice)',
+  })
+  @ApiQuery({
+    name: 'maxPrice',
+    required: false,
+    type: Number,
+    description: 'Maximum product price filter (checks salePrice if available, otherwise originalPrice)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Inventory items retrieved successfully',
@@ -106,6 +142,12 @@ export class InventoryController {
     @Query('minQuantity') minQuantity?: string,
     @Query('maxQuantity') maxQuantity?: string,
     @Query('status') status?: string,
+    @Query('brandId') brandId?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('subCategoryId') subCategoryId?: string,
+    @Query('productStatus') productStatus?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
     @Request() req?,
   ) {
     const sellerId = req.user.role === UserRole.SELLER ? req.user.userId : undefined;
@@ -118,6 +160,15 @@ export class InventoryController {
       status,
       minQuantity ? parseInt(minQuantity) : undefined,
       maxQuantity ? parseInt(maxQuantity) : undefined,
+      undefined, // sellerStatus
+      undefined, // qaStatus
+      brandId,
+      categoryId,
+      subCategoryId,
+      minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice ? parseFloat(maxPrice) : undefined,
+      undefined, // minRating
+      productStatus,
     );
     const lang = this.getLang(req);
     return formatResponse(
