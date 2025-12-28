@@ -71,82 +71,126 @@ export class InventoryController {
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SELLER)
-  @ApiOperation({ summary: 'Get all inventory items' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'productId', required: false, type: String })
+  @ApiOperation({
+    summary: 'Get all inventory items',
+    description:
+      'Get all inventory items with comprehensive filtering options. Supports pagination, search, and multiple filter combinations for products and inventory quantities.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number for pagination (default: 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page (default: 10)',
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search products by name (searches both English and Arabic names)',
+    example: 'product name',
+  })
+  @ApiQuery({
+    name: 'productId',
+    required: false,
+    type: String,
+    description: 'Filter by specific product ID (MongoDB ObjectId). If provided with other filters, validates that the product matches all filters.',
+    example: '507f1f77bcf86cd799439011',
+  })
   @ApiQuery({
     name: 'minQuantity',
     required: false,
     type: Number,
-    description: 'Minimum total quantity filter',
+    description: 'Minimum total inventory quantity (filters inventory items with totalQuantity >= minQuantity)',
+    example: 10,
   })
   @ApiQuery({
     name: 'maxQuantity',
     required: false,
     type: Number,
-    description: 'Maximum total quantity filter',
+    description: 'Maximum total inventory quantity (filters inventory items with totalQuantity <= maxQuantity)',
+    example: 100,
   })
   @ApiQuery({
     name: 'status',
     required: false,
     enum: ['in_stock', 'out_of_stock'],
-    description: 'Filter by stock status: in_stock (quantity > 0) or out_of_stock (quantity <= 0)',
+    description:
+      'Filter by stock status: in_stock (quantity > 0) or out_of_stock (quantity <= 0). Can be combined with minQuantity/maxQuantity.',
+    example: 'in_stock',
   })
   @ApiQuery({
     name: 'brandId',
     required: false,
     type: String,
-    description: 'Filter by product brand ID (MongoDB ObjectId)',
+    description: 'Filter by product brand ID (MongoDB ObjectId). Returns inventory for products with this brand.',
+    example: '507f1f77bcf86cd799439011',
   })
   @ApiQuery({
     name: 'categoryId',
     required: false,
     type: String,
-    description: 'Filter by product category ID (MongoDB ObjectId)',
+    description: 'Filter by product category ID (MongoDB ObjectId). Returns inventory for products in this category.',
+    example: '507f1f77bcf86cd799439012',
   })
   @ApiQuery({
     name: 'subcategoryId',
     required: false,
     type: String,
-    description: 'Filter by product subcategory ID (MongoDB ObjectId)',
+    description: 'Filter by product subcategory ID (MongoDB ObjectId). Returns inventory for products in this subcategory.',
+    example: '507f1f77bcf86cd799439013',
   })
   @ApiQuery({
     name: 'productStatus',
     required: false,
     enum: ['active', 'inactive'],
-    description: 'Filter by product status: active or inactive',
+    description: 'Filter by product active status. Returns inventory only for active or inactive products.',
+    example: 'active',
   })
   @ApiQuery({
     name: 'minPrice',
     required: false,
     type: Number,
-    description: 'Minimum product price filter (checks salePrice if available, otherwise originalPrice)',
+    description:
+      'Minimum product price filter. Checks salePrice if available, otherwise checks originalPrice. Can be combined with maxPrice for price range filtering.',
+    example: 10.5,
   })
   @ApiQuery({
     name: 'maxPrice',
     required: false,
     type: Number,
-    description: 'Maximum product price filter (checks salePrice if available, otherwise originalPrice)',
+    description:
+      'Maximum product price filter. Checks salePrice if available, otherwise checks originalPrice. Can be combined with minPrice for price range filtering.',
+    example: 100.0,
   })
   @ApiQuery({
     name: 'sellerStatus',
     required: false,
     enum: ['active', 'inactive'],
-    description: 'Filter by seller status: active or inactive',
+    description:
+      'Filter by seller account status. Returns inventory for products owned by active or inactive sellers. For sellers, this is automatically filtered to their own products.',
+    example: 'active',
   })
   @ApiQuery({
     name: 'qaStatus',
     required: false,
     type: String,
-    description: 'Filter by product QA status',
+    description: 'Filter by product QA (Quality Assurance) status. Returns inventory for products with this QA status.',
+    example: 'approved',
   })
   @ApiQuery({
     name: 'minRating',
     required: false,
     type: Number,
-    description: 'Minimum product rating filter (products with rating >= minRating)',
+    description: 'Minimum product rating filter. Returns inventory for products with rating >= minRating (0-5 scale).',
+    example: 4.0,
   })
   @ApiResponse({
     status: 200,

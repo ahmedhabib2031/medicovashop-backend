@@ -104,32 +104,30 @@ export class InventoryService {
     // Build product filter to apply before filtering inventory
     const productFilter: any = {};
 
-    if (productId) {
-      query.productId = productId;
-    }
+    // Note: productId will be handled after product filters are applied
 
     // Filter by brand
-    if (brandId) {
+    if (brandId && brandId.trim() !== '') {
       productFilter.brand = brandId;
     }
 
     // Filter by category
-    if (categoryId) {
+    if (categoryId && categoryId.trim() !== '') {
       productFilter.category = categoryId;
     }
 
     // Filter by subcategory
-    if (subcategoryId) {
+    if (subcategoryId && subcategoryId.trim() !== '') {
       productFilter.subcategory = subcategoryId;
     }
 
     // Filter by QA status (if qaStatus field exists on Product)
-    if (qaStatus) {
+    if (qaStatus && qaStatus.trim() !== '') {
       productFilter.qaStatus = qaStatus;
     }
 
     // Filter by product status (active/inactive)
-    if (productStatus) {
+    if (productStatus && (productStatus === 'active' || productStatus === 'inactive')) {
       productFilter.active = productStatus === 'active';
     }
 
@@ -171,7 +169,7 @@ export class InventoryService {
     }
 
     // Filter by seller status (active/inactive)
-    if (sellerStatus) {
+    if (sellerStatus && (sellerStatus === 'active' || sellerStatus === 'inactive')) {
       const isActive = sellerStatus === 'active';
       const activeSellers = await this.userModel
         .find({ role: 'seller', active: isActive })
@@ -198,7 +196,12 @@ export class InventoryService {
     }
 
     // Apply product filters to get product IDs
-    if (Object.keys(productFilter).length > 0 || search) {
+    // Check if search is provided and not empty
+    const hasSearch = search && search.trim() !== '';
+    // Check if there are any product filters (excluding _priceFilter which is temporary)
+    const hasProductFilters = Object.keys(productFilter).filter(key => key !== '_priceFilter').length > 0;
+    
+    if (hasProductFilters || hasSearch) {
       const searchFilter: any = { ...productFilter };
       
       // Remove temporary price filter to handle it separately
@@ -206,7 +209,7 @@ export class InventoryService {
       delete searchFilter._priceFilter;
 
       // Combine search and price filters properly
-      if (search && priceFilter) {
+      if (hasSearch && priceFilter) {
         // Both search and price filter exist - combine with $and
         searchFilter.$and = [
           {
@@ -217,11 +220,11 @@ export class InventoryService {
           },
           priceFilter,
         ];
-      } else if (search) {
+      } else if (hasSearch) {
         // Only search filter
         searchFilter.$or = [
-          { nameEn: { $regex: search, $options: 'i' } },
-          { nameAr: { $regex: search, $options: 'i' } },
+          { nameEn: { $regex: search.trim(), $options: 'i' } },
+          { nameAr: { $regex: search.trim(), $options: 'i' } },
         ];
       } else if (priceFilter) {
         // Only price filter
@@ -263,12 +266,41 @@ export class InventoryService {
       } else {
         query.productId = { $in: productIds };
       }
+    } else if (productId && productId.trim() !== '') {
+      // Only productId provided, no other product filters
+      // Validate product exists and apply sellerId filter if needed
+      const productFilter: any = {};
+      if (sellerId) {
+        productFilter.sellerId = sellerId;
+      }
+      productFilter._id = productId;
+      
+      const product = await this.productModel.findOne(productFilter).select('_id');
+      if (!product) {
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
+      query.productId = productId;
     } else if (sellerId) {
-      // Legacy sellerId filter (if no other product filters)
+      // Only sellerId filter (if no other product filters)
       const sellerProducts = await this.productModel
         .find({ sellerId })
         .select('_id');
       const productIds = sellerProducts.map((p) => p._id);
+      if (productIds.length === 0) {
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
       query.productId = { $in: productIds };
     }
 
