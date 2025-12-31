@@ -51,17 +51,53 @@ async findAll(query: {
       .lean()
       .exec();
 
-    // Map categories to add dummy fields
-    const data = categories.map(cat => ({
-      _id: cat._id,
-      name: cat.name,
-      nameAr: cat.nameAr,
-      image: cat.image,
-      status: cat.active, // rename active -> status
-      products: 0,
-      totalOrders: 0,
-      totalSales: 0,
-    }));
+    // Get category IDs
+    const categoryIds = categories.map((cat) => cat._id);
+
+    // Fetch all subcategories for these categories
+    const subCategories = await this.subCategoryModel
+      .find({
+        parentCategory: { $in: categoryIds },
+      })
+      .select('name nameAr image active parentCategory sortOrder slug slugAr')
+      .sort({ sortOrder: 1, createdAt: -1 })
+      .lean()
+      .exec();
+
+    // Group subcategories by parentCategory
+    const subCategoriesByParent = subCategories.reduce((acc, subCat) => {
+      const parentId = subCat.parentCategory.toString();
+      if (!acc[parentId]) {
+        acc[parentId] = [];
+      }
+      acc[parentId].push({
+        _id: subCat._id,
+        name: subCat.name,
+        nameAr: subCat.nameAr,
+        image: subCat.image,
+        status: subCat.active,
+        slug: subCat.slug,
+        slugAr: subCat.slugAr,
+        sortOrder: subCat.sortOrder,
+      });
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Map categories to add dummy fields and subcategories
+    const data = categories.map((cat) => {
+      const categoryId = cat._id.toString();
+      return {
+        _id: cat._id,
+        name: cat.name,
+        nameAr: cat.nameAr,
+        image: cat.image,
+        status: cat.active, // rename active -> status
+        products: 0,
+        totalOrders: 0,
+        totalSales: 0,
+        subCategories: subCategoriesByParent[categoryId] || [],
+      };
+    });
 
     return { data, total };
   }
