@@ -32,19 +32,39 @@ export class SubCategoryService {
     const skip = (page - 1) * limit;
 
     const filter: any = {};
-    if (query.search) {
-      const regex = new RegExp(query.search, 'i');
-      filter.$or = [{ name: regex }, { nameAr: regex }];
-    }
 
     // Filter by parent category ID (support both parentCategory and categoryId for backward compatibility)
     const categoryId = query.categoryId || query.parentCategory;
     if (categoryId && categoryId.trim() !== '') {
       try {
-        filter.parentCategory = new Types.ObjectId(categoryId);
+        // Validate ObjectId format
+        if (!Types.ObjectId.isValid(categoryId.trim())) {
+          throw new BadRequestException('Invalid category ID format');
+        }
+        filter.parentCategory = new Types.ObjectId(categoryId.trim());
       } catch (error) {
-        // Invalid ObjectId format, skip filter
+        if (error instanceof BadRequestException) {
+          throw error;
+        }
+        // Invalid ObjectId format
         throw new BadRequestException('Invalid category ID format');
+      }
+    }
+
+    // Search filter
+    if (query.search && query.search.trim() !== '') {
+      const regex = new RegExp(query.search.trim(), 'i');
+      const searchConditions = [{ name: regex }, { nameAr: regex }];
+
+      // If category filter exists, combine with $and to ensure both conditions are met
+      if (filter.parentCategory) {
+        filter.$and = [
+          { parentCategory: filter.parentCategory },
+          { $or: searchConditions },
+        ];
+        delete filter.parentCategory; // Remove from root since it's now in $and
+      } else {
+        filter.$or = searchConditions;
       }
     }
 
