@@ -1,16 +1,13 @@
 import { IsEmail, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateSellerRootEmailDto {
+export class SendOtpDto {
   @ApiProperty({
-    example: 'seller@gmail.com',
-    description: 'New seller root/contact email',
+    example: 'user@example.com',
+    description: 'Email address to send OTP to',
   })
   @IsEmail({}, { message: 'Please provide a valid email address' })
-  @IsNotEmpty()
-  newEmail: string;
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
 }
-
-
-
 

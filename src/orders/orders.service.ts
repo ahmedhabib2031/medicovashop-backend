@@ -316,6 +316,7 @@ export class OrdersService {
     customerId?: string,
     sellerId?: string,
     search?: string,
+    timeFilter?: string,
   ) {
     const skip = (page - 1) * limit;
     const query: any = {};
@@ -341,13 +342,59 @@ export class OrdersService {
       ];
     }
 
-    if (search) {
-      query.$or = [
-        { orderNumber: { $regex: search, $options: 'i' } },
-        { couponCode: { $regex: search, $options: 'i' } },
-        { trackingNumber: { $regex: search, $options: 'i' } },
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      
+      // Search for products matching the keyword
+      const productSearchFilter: any = {
+        $or: [
+          { nameEn: searchRegex },
+          { nameAr: searchRegex },
+          { sku: searchRegex },
+        ],
+      };
+      
+      const matchingProducts = await this.productModel
+        .find(productSearchFilter)
+        .select('_id');
+      const matchingProductIds = matchingProducts.map((p) => p._id);
+
+      // Build search conditions
+      const searchConditions: any[] = [
+        { orderNumber: searchRegex },
+        { couponCode: searchRegex },
+        { trackingNumber: searchRegex },
+        // Search in product names stored in order items
+        { 'items.productName': searchRegex },
+        { 'items.productNameAr': searchRegex },
+        { 'items.sku': searchRegex },
       ];
+
+      // If products found, also search by product IDs
+      if (matchingProductIds.length > 0) {
+        searchConditions.push({ 'items.productId': { $in: matchingProductIds } });
+      }
+
+      // Combine with existing $or if sellerId filter exists
+      if (query.$or) {
+        // If sellerId filter exists, combine with $and
+        query.$and = [
+          { $or: query.$or }, // Existing sellerId conditions
+          { $or: searchConditions }, // Search conditions
+        ];
+        delete query.$or;
+      } else {
+        query.$or = searchConditions;
+      }
     }
+
+    // Apply time filter
+    if (timeFilter && timeFilter === 'last_3_months') {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      query.createdAt = { $gte: threeMonthsAgo };
+    }
+    // If timeFilter is 'all' or not provided, no date filter is applied
 
     const [data, total] = await Promise.all([
       this.orderModel

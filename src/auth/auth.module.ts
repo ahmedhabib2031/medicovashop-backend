@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { EmailService } from './services/email.service';
 
 import { JwtStrategy } from './jwt.strategy';
 
 import { UsersModule } from '../users/users.module';
+import { Otp, OtpSchema } from './entities/otp.entity';
+
 @Module({
   imports: [
     UsersModule, // already contains User model
+    MongooseModule.forFeature([{ name: Otp.name, schema: OtpSchema }]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
@@ -20,7 +25,7 @@ import { UsersModule } from '../users/users.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, EmailService],
   exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {}

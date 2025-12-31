@@ -118,6 +118,8 @@ export class ProductsService {
     active?: boolean;
     minPrice?: number;
     maxPrice?: number;
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<{ data: Product[]; total: number }> {
     const page = query.page > 0 ? query.page : 1;
     const limit = query.limit > 0 ? query.limit : 10;
@@ -149,6 +151,23 @@ export class ProductsService {
       }
       if (query.maxPrice !== undefined) {
         filter.originalPrice.$lte = query.maxPrice;
+      }
+    }
+
+    // Date range filter (filter by createdAt)
+    if (query.startDate || query.endDate) {
+      filter.createdAt = {};
+      if (query.startDate) {
+        // Set start of day for startDate
+        const start = new Date(query.startDate);
+        start.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = start;
+      }
+      if (query.endDate) {
+        // Set end of day for endDate
+        const end = new Date(query.endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
       }
     }
 

@@ -285,6 +285,8 @@ export class ProductsController {
   @ApiQuery({ name: 'active', required: false, type: Boolean })
   @ApiQuery({ name: 'minPrice', required: false, type: Number })
   @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+  @ApiQuery({ name: 'startDate', required: false, type: String, description: 'Filter products created on or after this date (ISO format: YYYY-MM-DD)' })
+  @ApiQuery({ name: 'endDate', required: false, type: String, description: 'Filter products created on or before this date (ISO format: YYYY-MM-DD)' })
   @ApiResponse({ status: 200, description: 'Products fetched successfully' })
   @ApiResponse({ status: 403, description: 'Access denied' })
   async getSellerProducts(
@@ -298,6 +300,8 @@ export class ProductsController {
     @Query('active') active,
     @Query('minPrice') minPrice,
     @Query('maxPrice') maxPrice,
+    @Query('startDate') startDate,
+    @Query('endDate') endDate,
     @Req() req,
   ) {
     const pageNum = parseInt(page) || 1;
@@ -333,6 +337,13 @@ export class ProductsController {
     }
     if (maxPrice) {
       query.maxPrice = parseFloat(maxPrice);
+    }
+
+    if (startDate) {
+      query.startDate = new Date(startDate);
+    }
+    if (endDate) {
+      query.endDate = new Date(endDate);
     }
 
     const result = await this.productsService.findAll(query);

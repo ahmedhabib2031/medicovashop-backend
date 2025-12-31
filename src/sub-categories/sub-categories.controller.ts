@@ -50,13 +50,15 @@ export class SubCategoryController {
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'parentCategory', required: false, type: String, description: 'Filter by parent category ID' })
+  @ApiQuery({ name: 'parentCategory', required: false, type: String, description: 'Filter by parent category ID (deprecated, use categoryId)' })
+  @ApiQuery({ name: 'categoryId', required: false, type: String, description: 'Filter by parent category ID' })
   @ApiResponse({ status: 200, description: 'Subcategories retrieved successfully' })
   async findAll(
     @Query('page') page: string,
     @Query('limit') limit: string,
     @Query('search') search: string,
     @Query('parentCategory') parentCategory: string,
+    @Query('categoryId') categoryId: string,
     @Req() req,
   ) {
     const pageNum = parseInt(page) || 1;
@@ -67,6 +69,7 @@ export class SubCategoryController {
       limit: limitNum,
       search,
       parentCategory,
+      categoryId,
     });
 
     const lang = this.getLang(req);

@@ -76,6 +76,13 @@ export class OrdersController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({
+    name: 'timeFilter',
+    required: false,
+    enum: ['all', 'last_3_months'],
+    description:
+      'Filter orders by time: "all" for all orders, "last_3_months" for orders from last 3 months',
+  })
   @ApiResponse({
     status: 200,
     description: 'Orders retrieved successfully',
@@ -85,6 +92,7 @@ export class OrdersController {
     @Query('limit') limit?: string,
     @Query('status') status?: OrderStatus,
     @Query('search') search?: string,
+    @Query('timeFilter') timeFilter?: string,
     @Request() req?,
   ) {
     const userId = req.user.id || req.user.userId;
@@ -107,6 +115,7 @@ export class OrdersController {
       customerId,
       sellerId,
       search,
+      timeFilter,
     );
     const lang = this.getLang(req);
     return formatResponse(
@@ -228,6 +237,13 @@ export class OrdersController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
+  @ApiQuery({
+    name: 'timeFilter',
+    required: false,
+    enum: ['all', 'last_3_months'],
+    description:
+      'Filter orders by time: "all" for all orders, "last_3_months" for orders from last 3 months',
+  })
   @ApiResponse({
     status: 200,
     description: 'User orders retrieved successfully',
@@ -236,6 +252,7 @@ export class OrdersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: OrderStatus,
+    @Query('timeFilter') timeFilter?: string,
     @Request() req?,
   ) {
     const customerId = req.user.id || req.user.userId;
@@ -244,6 +261,9 @@ export class OrdersController {
       limit ? parseInt(limit) : 10,
       status,
       customerId,
+      undefined,
+      undefined,
+      timeFilter,
     );
     const lang = this.getLang(req);
     return formatResponse(
@@ -254,10 +274,19 @@ export class OrdersController {
 
   @Get('seller/my-orders')
   @Roles(UserRole.SELLER)
-  @ApiOperation({ summary: 'Get seller orders (orders containing seller products)' })
+  @ApiOperation({
+    summary: 'Get seller orders (orders containing seller products)',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
+  @ApiQuery({
+    name: 'timeFilter',
+    required: false,
+    enum: ['all', 'last_3_months'],
+    description:
+      'Filter orders by time: "all" for all orders, "last_3_months" for orders from last 3 months',
+  })
   @ApiResponse({
     status: 200,
     description: 'Seller orders retrieved successfully',
@@ -266,6 +295,7 @@ export class OrdersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: OrderStatus,
+    @Query('timeFilter') timeFilter?: string,
     @Request() req?,
   ) {
     const sellerId = req.user.id || req.user.userId;
@@ -275,6 +305,8 @@ export class OrdersController {
       status,
       undefined,
       sellerId,
+      undefined,
+      timeFilter,
     );
     const lang = this.getLang(req);
     return formatResponse(

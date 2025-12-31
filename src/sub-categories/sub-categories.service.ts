@@ -25,6 +25,7 @@ export class SubCategoryService {
     limit?: number;
     search?: string;
     parentCategory?: string;
+    categoryId?: string;
   }): Promise<{ data: any[]; total: number }> {
     const page = query.page > 0 ? query.page : 1;
     const limit = query.limit > 0 ? query.limit : 10;
@@ -36,8 +37,15 @@ export class SubCategoryService {
       filter.$or = [{ name: regex }, { nameAr: regex }];
     }
 
-    if (query.parentCategory) {
-      filter.parentCategory = new Types.ObjectId(query.parentCategory);
+    // Filter by parent category ID (support both parentCategory and categoryId for backward compatibility)
+    const categoryId = query.categoryId || query.parentCategory;
+    if (categoryId && categoryId.trim() !== '') {
+      try {
+        filter.parentCategory = new Types.ObjectId(categoryId);
+      } catch (error) {
+        // Invalid ObjectId format, skip filter
+        throw new BadRequestException('Invalid category ID format');
+      }
     }
 
     const total = await this.subCategoryModel.countDocuments(filter);

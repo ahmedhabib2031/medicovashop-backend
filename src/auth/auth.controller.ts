@@ -3,6 +3,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@n
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { I18nService } from 'nestjs-i18n';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
@@ -71,5 +73,58 @@ export class AuthController {
       data: tokens,
       message: await this.i18n.t('auth.TOKEN_REFRESHED', { lang: tokens.user.language || 'en' }),
     };
+  }
+
+  @Post('send-otp')
+  @ApiOperation({
+    summary: 'Send OTP to email',
+    description: 'Send a one-time password (OTP) to the specified email address',
+  })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid email address' })
+  @ApiResponse({ status: 500, description: 'Failed to send OTP email' })
+  async sendOtp(@Body() dto: SendOtpDto, @Req() req) {
+    try {
+      const result = await this.authService.sendOtp(dto);
+      const lang = this.getLang(req);
+      return {
+        data: result,
+        message: await this.i18n.t('auth.OTP_SENT', { lang }),
+      };
+    } catch (error) {
+      const lang = this.getLang(req);
+      throw new BadRequestException({
+        message: await this.i18n.t('auth.OTP_SEND_FAILED', { lang }),
+      });
+    }
+  }
+
+  @Post('verify-otp')
+  @ApiOperation({
+    summary: 'Verify OTP',
+    description: 'Verify the OTP code sent to the email address',
+  })
+  @ApiResponse({ status: 200, description: 'OTP verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired OTP code' })
+  @ApiResponse({ status: 404, description: 'OTP not found' })
+  async verifyOtp(@Body() dto: VerifyOtpDto, @Req() req) {
+    try {
+      const result = await this.authService.verifyOtp(dto);
+      const lang = this.getLang(req);
+      return {
+        data: result,
+        message: await this.i18n.t('auth.OTP_VERIFIED', { lang }),
+      };
+    } catch (error) {
+      const lang = this.getLang(req);
+      if (error.status === 404) {
+        throw new BadRequestException({
+          message: await this.i18n.t('auth.OTP_NOT_FOUND', { lang }),
+        });
+      }
+      throw new BadRequestException({
+        message: error.message || await this.i18n.t('auth.OTP_VERIFICATION_FAILED', { lang }),
+      });
+    }
   }
 }

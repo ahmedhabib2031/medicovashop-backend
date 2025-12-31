@@ -1,17 +1,25 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UserRole } from '../users/entities/user.entity';
+import { Otp, OtpDocument } from './entities/otp.entity';
+import { EmailService } from './services/email.service';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwt: JwtService,
+    @InjectModel(Otp.name) private otpModel: Model<OtpDocument>,
+    private emailService: EmailService,
   ) {}
 
   // ==========================
@@ -143,5 +151,91 @@ export class AuthService {
 
   async getUserByEmail(email: string) {
     return this.usersService.findByEmail(email);
+  }
+
+  // ==========================
+  // SEND OTP
+  // ==========================
+  async sendOtp(dto: SendOtpDto): Promise<{ message: string }> {
+    const { email } = dto;
+
+    // Generate 6-digit OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Set expiration time (10 minutes from now)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+    // Invalidate any existing unverified OTPs for this email
+    await this.otpModel.updateMany(
+      { email, verified: false },
+      { verified: true }, // Mark as verified to invalidate them
+    );
+
+    // Create new OTP record
+    await this.otpModel.create({
+      email,
+      code: otpCode,
+      expiresAt,
+      verified: false,
+      attempts: 0,
+    });
+
+    // Send OTP via email
+    await this.emailService.sendOtpEmail(email, otpCode);
+
+    return {
+      message: 'OTP sent successfully to your email',
+    };
+  }
+
+  // ==========================
+  // VERIFY OTP
+  // ==========================
+  async verifyOtp(dto: VerifyOtpDto): Promise<{ verified: boolean; message: string }> {
+    const { email, code } = dto;
+
+    // Find the most recent unverified OTP for this email
+    const otp = await this.otpModel
+      .findOne({
+        email,
+        verified: false,
+        expiresAt: { $gt: new Date() }, // Not expired
+      })
+      .sort({ createdAt: -1 }) // Get the most recent one
+      .exec();
+
+    if (!otp) {
+      throw new NotFoundException('OTP not found or expired. Please request a new OTP.');
+    }
+
+    // Check if maximum attempts exceeded (e.g., 5 attempts)
+    const MAX_ATTEMPTS = 5;
+    if (otp.attempts >= MAX_ATTEMPTS) {
+      throw new BadRequestException(
+        'Maximum verification attempts exceeded. Please request a new OTP.',
+      );
+    }
+
+    // Verify the code
+    if (otp.code !== code) {
+      // Increment attempts
+      otp.attempts += 1;
+      await otp.save();
+
+      const remainingAttempts = MAX_ATTEMPTS - otp.attempts;
+      throw new BadRequestException(
+        `Invalid OTP code. ${remainingAttempts > 0 ? `${remainingAttempts} attempt(s) remaining.` : 'Please request a new OTP.'}`,
+      );
+    }
+
+    // Mark OTP as verified
+    otp.verified = true;
+    await otp.save();
+
+    return {
+      verified: true,
+      message: 'OTP verified successfully',
+    };
   }
 }
