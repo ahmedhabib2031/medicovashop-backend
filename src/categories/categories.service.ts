@@ -51,13 +51,18 @@ async findAll(query: {
       .lean()
       .exec();
 
-    // Get category IDs
+    // Get category IDs as both ObjectId and string for comparison
     const categoryIds = categories.map((cat) => cat._id);
+    const categoryIdStrings = categoryIds.map((id) => id.toString());
 
     // Fetch all subcategories for these categories
+    // Handle both ObjectId and string formats for parentCategory
     const subCategories = await this.subCategoryModel
       .find({
-        parentCategory: { $in: categoryIds },
+        $or: [
+          { parentCategory: { $in: categoryIds } }, // ObjectId format
+          { parentCategory: { $in: categoryIdStrings } }, // String format
+        ],
       })
       .select('name nameAr image active parentCategory sortOrder slug slugAr')
       .sort({ sortOrder: 1, createdAt: -1 })
@@ -66,20 +71,38 @@ async findAll(query: {
 
     // Group subcategories by parentCategory
     const subCategoriesByParent = subCategories.reduce((acc, subCat) => {
-      const parentId = subCat.parentCategory.toString();
-      if (!acc[parentId]) {
-        acc[parentId] = [];
+      // Handle both ObjectId and string formats
+      let parentId: string;
+      if (subCat.parentCategory) {
+        parentId =
+          typeof subCat.parentCategory === 'string'
+            ? subCat.parentCategory
+            : subCat.parentCategory.toString();
+      } else {
+        return acc; // Skip if no parentCategory
       }
-      acc[parentId].push({
-        _id: subCat._id,
-        name: subCat.name,
-        nameAr: subCat.nameAr,
-        image: subCat.image,
-        status: subCat.active,
-        slug: subCat.slug,
-        slugAr: subCat.slugAr,
-        sortOrder: subCat.sortOrder,
-      });
+
+      // Find matching category ID (compare as strings)
+      const matchingCategoryId = categoryIds.find(
+        (catId) => catId.toString() === parentId,
+      );
+
+      if (matchingCategoryId) {
+        const categoryKey = matchingCategoryId.toString();
+        if (!acc[categoryKey]) {
+          acc[categoryKey] = [];
+        }
+        acc[categoryKey].push({
+          _id: subCat._id,
+          name: subCat.name,
+          nameAr: subCat.nameAr,
+          image: subCat.image,
+          status: subCat.active,
+          slug: subCat.slug,
+          slugAr: subCat.slugAr,
+          sortOrder: subCat.sortOrder,
+        });
+      }
       return acc;
     }, {} as Record<string, any[]>);
 
