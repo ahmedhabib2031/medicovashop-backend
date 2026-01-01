@@ -7,17 +7,22 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // Initialize nodemailer transporter
-    // You can configure this with your SMTP settings from environment variables
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || '',
-      },
-    });
+    // Get SMTP configuration from environment variables
+    const smtpTransport = process.env.SMTP_TRANSPORT;
+
+    // Check if SMTP_TRANSPORT is provided
+    if (!smtpTransport) {
+      this.logger.warn(
+        'SMTP_TRANSPORT not configured. Email sending will fail. Please set SMTP_TRANSPORT environment variable.',
+      );
+      // Create a dummy transporter to avoid errors
+      this.transporter = nodemailer.createTransport({});
+      return;
+    }
+
+    // Initialize nodemailer transporter using connection string
+    // Format: smtps://username:password@smtp.gmail.com
+    this.transporter = nodemailer.createTransport(smtpTransport);
 
     // Verify connection configuration
     this.transporter.verify((error) => {
@@ -30,8 +35,19 @@ export class EmailService {
   }
 
   async sendOtpEmail(email: string, otpCode: string): Promise<void> {
+    // Check if SMTP_TRANSPORT is configured
+    const smtpTransport = process.env.SMTP_TRANSPORT;
+    const demoEmail = process.env.SMTP_DEMO_EMAIL || 'noreply@medicova.com';
+
+    if (!smtpTransport) {
+      const errorMessage =
+        'SMTP_TRANSPORT not configured. Please set SMTP_TRANSPORT environment variable.';
+      this.logger.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@medicova.com',
+      from: demoEmail,
       to: email,
       subject: 'Your OTP Verification Code',
       html: `
@@ -66,7 +82,11 @@ export class EmailService {
       this.logger.log(`OTP email sent successfully to ${email}. MessageId: ${info.messageId}`);
     } catch (error) {
       this.logger.error(`Failed to send OTP email to ${email}:`, error);
-      throw new Error('Failed to send OTP email');
+      const errorMessage =
+        error instanceof Error
+          ? `Failed to send OTP email: ${error.message}`
+          : 'Failed to send OTP email';
+      throw new Error(errorMessage);
     }
   }
 }

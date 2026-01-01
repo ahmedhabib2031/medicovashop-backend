@@ -27,3 +27,6 @@ export const OtpSchema = SchemaFactory.createForClass(Otp);
 OtpSchema.index({ email: 1, verified: 1 });
 OtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+
+
+
