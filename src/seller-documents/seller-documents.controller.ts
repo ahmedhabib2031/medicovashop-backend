@@ -221,15 +221,27 @@ export class SellerDocumentsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @ApiOperation({
     summary: 'Delete seller document',
-    description: 'Delete a document (Admin only)',
+    description: 'Delete a document (Admin can delete any, Seller can only delete their own)',
   })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document deleted successfully' })
   @ApiResponse({ status: 404, description: 'Document not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
   async remove(@Param('id') id: string, @Req() req) {
+    // If seller, ensure they can only delete their own document
+    if (req.user.role === UserRole.SELLER) {
+      const document = await this.sellerDocumentsService.findOne(id);
+      const docSellerId =
+        (document as any).sellerId?._id?.toString() ||
+        (document as any).sellerId?.toString();
+      if (docSellerId !== req.user.id) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
     await this.sellerDocumentsService.remove(id);
     const lang = this.getLang(req);
     return formatResponse(
