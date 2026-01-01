@@ -20,9 +20,33 @@ export class EmailService {
       return;
     }
 
-    // Initialize nodemailer transporter using connection string
+    // Parse connection string and create config object with TLS options
     // Format: smtps://username:password@smtp.gmail.com
-    this.transporter = nodemailer.createTransport(smtpTransport);
+    // Manually parse to handle passwords with special characters (spaces, etc.)
+    const match = smtpTransport.match(/^(smtps?):\/\/([^:]+):([^@]+)@(.+)$/);
+    if (match) {
+      const [, protocol, username, password, host] = match;
+      const config: any = {
+        host: host,
+        port: protocol === 'smtps' ? 465 : 587,
+        secure: protocol === 'smtps', // true for 465, false for other ports
+        auth: {
+          user: decodeURIComponent(username),
+          pass: decodeURIComponent(password),
+        },
+        tls: {
+          rejectUnauthorized: false, // Allow self-signed certificates
+        },
+      };
+
+      this.transporter = nodemailer.createTransport(config);
+    } else {
+      this.logger.error(
+        'Invalid SMTP connection string format. Expected format: smtps://username:password@smtp.gmail.com',
+      );
+      // Create a dummy transporter to avoid errors
+      this.transporter = nodemailer.createTransport({});
+    }
 
     // Verify connection configuration
     this.transporter.verify((error) => {
