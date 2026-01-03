@@ -4,6 +4,7 @@
     "DISCOUNT_FETCHED": "Discount fetched successfully",
     "DISCOUNT_UPDATED": "Discount updated successfully",
     "DISCOUNT_DELETED": "Discount deleted successfully",
+    "DISCOUNTS_BULK_DELETED": "Discounts deleted successfully",
     "STATUS_UPDATE_SUCCESS": "Discount status updated successfully",
     "CODE_GENERATED": "Discount code generated successfully"
 }

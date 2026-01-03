@@ -22,6 +22,7 @@ import {
 import { DiscountsService } from './coupons.service';
 import { CreateDiscountDto, DiscountMethod } from './dto/create-coupon.dto';
 import { UpdateDiscountDto } from './dto/update-coupon.dto';
+import { BulkDeleteCouponsDto } from './dto/bulk-delete-coupons.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -95,7 +96,7 @@ export class DiscountsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'method', required: false, enum: DiscountMethod })
-  @ApiQuery({ name: 'active', required: false, type: Boolean })
+  @ApiQuery({ name: 'active', required: false, type: Boolean, description: 'Filter by active status (true/false)' })
   @ApiQuery({
     name: 'startDate',
     required: false,
@@ -108,6 +109,12 @@ export class DiscountsController {
     type: String,
     description: 'Filter discounts that end on or after this date, or have no end date (ISO format: YYYY-MM-DD)',
   })
+  @ApiQuery({
+    name: 'storeId',
+    required: false,
+    type: String,
+    description: 'Filter by seller/store ID (MongoDB ObjectId). For sellers, this is automatically set to their own ID.',
+  })
   @ApiResponse({ status: 200, description: 'Discounts fetched successfully' })
   async findAll(
     @Query('page') page,
@@ -117,6 +124,7 @@ export class DiscountsController {
     @Query('active') active,
     @Query('startDate') startDate,
     @Query('endDate') endDate,
+    @Query('storeId') storeId,
     @Req() req,
   ) {
     const pageNum = parseInt(page) || 1;
@@ -133,9 +141,13 @@ export class DiscountsController {
       endDate: endDate ? new Date(endDate) : undefined,
     };
 
-    // If seller, only show their discounts
+    // Handle storeId/sellerId filtering
     if (req.user.role === UserRole.SELLER) {
+      // Sellers can only see their own discounts, ignore storeId query param
       query.sellerId = req.user.id;
+    } else if (req.user.role === UserRole.ADMIN && storeId) {
+      // Admins can filter by any storeId if provided
+      query.sellerId = storeId;
     }
 
     const result = await this.discountsService.findAll(query);
@@ -292,6 +304,26 @@ export class DiscountsController {
     return formatResponse(
       discount,
       await this.i18n.t('discount.DISCOUNT_UPDATED', { lang }),
+    );
+  }
+
+  @Delete('bulk')
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Bulk delete discounts',
+    description: 'Delete multiple discounts permanently (Admin can delete any, Seller can only delete their own)',
+  })
+  @ApiResponse({ status: 200, description: 'Discounts deleted successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid request data' })
+  @ApiResponse({ status: 404, description: 'One or more discounts not found' })
+  async bulkDelete(@Body() dto: BulkDeleteCouponsDto, @Req() req) {
+    const sellerId =
+      req.user.role === UserRole.SELLER ? req.user.id : undefined;
+    const result = await this.discountsService.removeMany(dto.ids, sellerId);
+    const lang = this.getLang(req);
+    return formatResponse(
+      { deletedCount: result.deletedCount },
+      await this.i18n.t('discount.DISCOUNTS_BULK_DELETED', { lang }),
     );
   }
 

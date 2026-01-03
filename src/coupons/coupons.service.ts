@@ -138,58 +138,60 @@ export class DiscountsService {
     const skip = (page - 1) * limit;
 
     const filter: any = {};
+    const andConditions: any[] = [];
 
     // If sellerId is provided, filter by it
     if (query?.sellerId) {
       filter.sellerId = query.sellerId;
     }
 
+    // Search filter
     if (query?.search) {
-      filter.$or = [
-        { discountName: { $regex: query.search, $options: 'i' } },
-        { discountCode: { $regex: query.search, $options: 'i' } },
-      ];
+      andConditions.push({
+        $or: [
+          { discountName: { $regex: query.search, $options: 'i' } },
+          { discountCode: { $regex: query.search, $options: 'i' } },
+        ],
+      });
     }
 
+    // Method filter
     if (query?.method) {
       filter.method = query.method;
     }
 
+    // Discount type filter
     if (query?.discountType) {
       filter.discountType = query.discountType;
     }
 
+    // Active status filter
     if (query?.active !== undefined) {
       filter.active = query.active;
     }
 
-    // Date filtering
+    // Start date filtering
+    // Filter discounts that start on or before the provided startDate
+    // (discounts that have already started)
     if (query?.startDate) {
-      // Filter discounts that start on or before the provided startDate
-      // (discounts that have already started)
       filter.startDate = { $lte: query.startDate };
     }
 
+    // End date filtering
+    // Filter discounts that end on or after the provided endDate, or have no end date
+    // (discounts that haven't ended yet or don't have an end date)
     if (query?.endDate) {
-      // Filter discounts that end on or after the provided endDate, or have no end date
-      // (discounts that haven't ended yet or don't have an end date)
-      const endDateFilter = {
+      andConditions.push({
         $or: [
           { endDate: { $gte: query.endDate } },
           { endDate: null },
         ],
-      };
+      });
+    }
 
-      // If we already have $or for search, use $and to combine
-      if (query?.search && filter.$or) {
-        filter.$and = [
-          { $or: filter.$or },
-          endDateFilter,
-        ];
-        delete filter.$or;
-      } else {
-        filter.$or = endDateFilter.$or;
-      }
+    // Combine all $and conditions if any exist
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
     }
 
     const total = await this.discountModel.countDocuments(filter);
