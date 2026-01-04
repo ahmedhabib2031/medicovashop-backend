@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -198,8 +199,29 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.USER, UserRole.SELLER)
+  @ApiOperation({
+    summary: 'Delete user',
+    description:
+      'Delete a user account (Admin can delete any, Users/Sellers can only delete their own account)',
+  })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Access denied - Users/Sellers can only delete their own account',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async delete(@Param('id') id: string, @Req() req) {
+    // If user or seller, ensure they can only delete their own account
+    if (req.user.role === UserRole.USER || req.user.role === UserRole.SELLER) {
+      if (req.user.id !== id) {
+        throw new ForbiddenException(
+          'Access denied: You can only delete your own account',
+        );
+      }
+    }
+
     await this.usersService.delete(id);
     const lang = this.getLang(req);
     return {
