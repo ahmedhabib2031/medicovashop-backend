@@ -29,7 +29,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
-import { OrderStatus } from './entities/order.entity';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from './entities/order.entity';
 import { formatResponse } from '../common/utils/response.util';
 
 @ApiTags('Orders')
@@ -83,6 +87,54 @@ export class OrdersController {
     description:
       'Filter orders by time: "all" for all orders, "last_3_months" for orders from last 3 months',
   })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    description: 'Filter by product category ID (MongoDB ObjectId)',
+  })
+  @ApiQuery({
+    name: 'brandId',
+    required: false,
+    type: String,
+    description: 'Filter by product brand ID (MongoDB ObjectId)',
+  })
+  @ApiQuery({
+    name: 'customerId',
+    required: false,
+    type: String,
+    description: 'Filter by customer ID (MongoDB ObjectId). Admin only.',
+  })
+  @ApiQuery({
+    name: 'sellerId',
+    required: false,
+    type: String,
+    description: 'Filter by seller ID (MongoDB ObjectId). Admin only.',
+  })
+  @ApiQuery({
+    name: 'paymentStatus',
+    required: false,
+    enum: PaymentStatus,
+    description: 'Filter by payment status',
+  })
+  @ApiQuery({
+    name: 'paymentMethod',
+    required: false,
+    enum: PaymentMethod,
+    description: 'Filter by payment method',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+    description: 'Filter orders created on or after this date (ISO format: YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+    description: 'Filter orders created on or before this date (ISO format: YYYY-MM-DD)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Orders retrieved successfully',
@@ -93,29 +145,54 @@ export class OrdersController {
     @Query('status') status?: OrderStatus,
     @Query('search') search?: string,
     @Query('timeFilter') timeFilter?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('brandId') brandId?: string,
+    @Query('customerId') customerId?: string,
+    @Query('sellerId') sellerId?: string,
+    @Query('paymentStatus') paymentStatus?: PaymentStatus,
+    @Query('paymentMethod') paymentMethod?: PaymentMethod,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
     @Request() req?,
   ) {
     const userId = req.user.id || req.user.userId;
     const userRole = req.user.role;
 
-    let customerId: string | undefined;
-    let sellerId: string | undefined;
+    let finalCustomerId: string | undefined;
+    let finalSellerId: string | undefined;
 
+    // Handle customerId filter
     if (userRole === UserRole.USER) {
-      customerId = userId;
-    } else if (userRole === UserRole.SELLER) {
-      sellerId = userId;
+      // Users can only see their own orders
+      finalCustomerId = userId;
+    } else if (userRole === UserRole.ADMIN && customerId) {
+      // Admins can filter by any customerId
+      finalCustomerId = customerId;
     }
-    // ADMIN can see all orders (no filter)
+
+    // Handle sellerId filter
+    if (userRole === UserRole.SELLER) {
+      // Sellers can only see orders with their products
+      finalSellerId = userId;
+    } else if (userRole === UserRole.ADMIN && sellerId) {
+      // Admins can filter by any sellerId
+      finalSellerId = sellerId;
+    }
 
     const result = await this.ordersService.findAll(
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 10,
       status,
-      customerId,
-      sellerId,
+      finalCustomerId,
+      finalSellerId,
       search,
       timeFilter,
+      categoryId,
+      brandId,
+      paymentStatus,
+      paymentMethod,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
     );
     const lang = this.getLang(req);
     return formatResponse(

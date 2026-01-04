@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Order, OrderDocument, OrderStatus, PaymentStatus } from './entities/order.entity';
+import {
+  Order,
+  OrderDocument,
+  OrderStatus,
+  PaymentStatus,
+  PaymentMethod,
+} from './entities/order.entity';
 import { Product, ProductDocument } from '../products/entities/product.entity';
 import { CustomerAddress, CustomerAddressDocument } from '../customer-addresses/entities/customer-address.entity';
 import { Discount, DiscountDocument } from '../coupons/entities/coupon.entity';
@@ -317,6 +323,12 @@ export class OrdersService {
     sellerId?: string,
     search?: string,
     timeFilter?: string,
+    categoryId?: string,
+    brandId?: string,
+    paymentStatus?: PaymentStatus,
+    paymentMethod?: PaymentMethod,
+    startDate?: Date,
+    endDate?: Date,
   ) {
     const skip = (page - 1) * limit;
     const query: any = {};
@@ -329,17 +341,48 @@ export class OrdersService {
       query.status = status;
     }
 
+    // Build product filter for category/brand (will be combined with sellerId if provided)
+    const productFilter: any = {};
+    if (categoryId && categoryId.trim() !== '') {
+      productFilter.category = categoryId;
+    }
+    if (brandId && brandId.trim() !== '') {
+      productFilter.brand = brandId;
+    }
+
+    // Handle sellerId filter (may be combined with category/brand)
+    let sellerProductIds: any[] = [];
     if (sellerId) {
-      // Find orders that contain products from this seller
+      // Build product filter including sellerId, category, and brand
+      const sellerProductFilter: any = { sellerId };
+      if (categoryId && categoryId.trim() !== '') {
+        sellerProductFilter.category = categoryId;
+      }
+      if (brandId && brandId.trim() !== '') {
+        sellerProductFilter.brand = brandId;
+      }
+
       const sellerProducts = await this.productModel
-        .find({ sellerId })
+        .find(sellerProductFilter)
         .select('_id');
-      const productIds = sellerProducts.map((p) => p._id);
+      sellerProductIds = sellerProducts.map((p) => p._id);
 
       query.$or = [
         { sellerId },
-        { 'items.productId': { $in: productIds } },
+        { 'items.productId': { $in: sellerProductIds } },
       ];
+    } else if (Object.keys(productFilter).length > 0) {
+      // Only category/brand filter (no sellerId)
+      const filteredProducts = await this.productModel
+        .find(productFilter)
+        .select('_id');
+      const filteredProductIds = filteredProducts.map((p) => p._id);
+      if (filteredProductIds.length === 0) {
+        // No products found, return empty result by using impossible condition
+        query['items.productId'] = { $in: [] };
+      } else {
+        query['items.productId'] = { $in: filteredProductIds };
+      }
     }
 
     if (search && search.trim() !== '') {
@@ -375,7 +418,7 @@ export class OrdersService {
         searchConditions.push({ 'items.productId': { $in: matchingProductIds } });
       }
 
-      // Combine with existing $or if sellerId filter exists
+      // Combine with existing filters
       if (query.$or) {
         // If sellerId filter exists, combine with $and
         query.$and = [
@@ -383,18 +426,51 @@ export class OrdersService {
           { $or: searchConditions }, // Search conditions
         ];
         delete query.$or;
+      } else if (query['items.productId']) {
+        // Category/brand filter exists, combine with $and
+        const productFilterCondition = query['items.productId'];
+        query.$and = [
+          productFilterCondition,
+          { $or: searchConditions },
+        ];
+        delete query['items.productId'];
       } else {
         query.$or = searchConditions;
       }
     }
 
-    // Apply time filter
-    if (timeFilter && timeFilter === 'last_3_months') {
+    // Filter by payment status
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    // Filter by payment method
+    if (paymentMethod) {
+      query.paymentMethod = paymentMethod;
+    }
+
+    // Apply date range filter (startDate/endDate take precedence over timeFilter)
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        // Set start of day for startDate
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        query.createdAt.$gte = start;
+      }
+      if (endDate) {
+        // Set end of day for endDate
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    } else if (timeFilter && timeFilter === 'last_3_months') {
+      // Apply time filter only if startDate/endDate are not provided
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       query.createdAt = { $gte: threeMonthsAgo };
     }
-    // If timeFilter is 'all' or not provided, no date filter is applied
+    // If timeFilter is 'all' or not provided, and no startDate/endDate, no date filter is applied
 
     const [data, total] = await Promise.all([
       this.orderModel
