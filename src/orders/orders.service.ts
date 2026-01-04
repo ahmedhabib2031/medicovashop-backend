@@ -402,7 +402,14 @@ export class OrdersService {
         .populate('customerId', 'firstName lastName email phone')
         .populate('shippingAddressId')
         .populate('couponId', 'discountName discountCode discountType discountValue')
-        .populate('items.productId', 'nameEn nameAr sku featuredImages galleryImages')
+        .populate({
+          path: 'items.productId',
+          select: 'nameEn nameAr sku featuredImages galleryImages',
+          populate: {
+            path: 'sellerId',
+            select: 'firstName lastName brandName email',
+          },
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
